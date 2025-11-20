@@ -10,6 +10,8 @@ RUN npm install
 
 # 4. Копируем весь фронтенд код
 COPY . .
+# Копируем публичные файлы отдельно (favicon, SVG и т.д.)
+COPY public ./public
 RUN npm run build
 
 # 5. Бэкенд
@@ -25,6 +27,8 @@ WORKDIR /app
 
 # Копируем собранный фронтенд
 COPY --from=builder /app/.output ./
+# Копируем public, чтобы все статические файлы были доступны
+COPY --from=builder /app/public ./public
 
 # Копируем бэкенд
 COPY --from=builder /app/backend/dist ./backend/dist
@@ -34,5 +38,5 @@ COPY --from=builder /app/backend/node_modules ./backend/node_modules
 ENV PORT 8080
 EXPOSE 8080
 
-# Старт сервера (можно написать свой скрипт, чтобы запускался и фронтенд, и бэкенд)
+# Старт сервера
 CMD ["node", "backend/dist/index.js"]
