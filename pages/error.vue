@@ -15,13 +15,6 @@
       </div>
 
       <!-- Illustration -->
-      <div class="mb-8">
-        <img
-          src="~/uploads/documents/og-image.svg"
-          alt="Ошибка"
-          class="w-full max-w-md mx-auto"
-        />
-      </div>
 
       <!-- Actions -->
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
