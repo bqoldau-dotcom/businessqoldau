@@ -7,6 +7,7 @@ WORKDIR /app
 # 3. Копируем фронтенд package.json и устанавливаем зависимости
 COPY package*.json ./
 RUN npm install
+RUN rm -rf .nuxt
 
 # 4. Копируем весь фронтенд код
 COPY . .
