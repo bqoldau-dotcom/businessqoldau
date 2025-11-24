@@ -25,6 +25,7 @@ model User {
   emailVerificationTokens  EmailVerificationToken[]
   passwordResetTokens      PasswordResetToken[]
   applicationSettings      ApplicationSettings[]
+  contactReplies           Contact[]  @relation("ContactReplies")
 
   @@map("users")
 }
@@ -55,16 +56,36 @@ model Application {
   updatedAt     DateTime          @updatedAt @map("updated_at")
 
   user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  files         ApplicationFile[]
 
   @@map("applications")
 }
 
+model ApplicationFile {
+  id            String   @id @default(uuid()) @db.Uuid
+  applicationId String   @map("application_id") @db.Uuid
+  filePath      String   @map("file_path")
+  fileName      String   @map("file_name")
+  fileSize      Int      @map("file_size")
+  mimeType      String   @map("mime_type")
+  fileType      FileType @default(document) @map("file_type")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("application_files")
+}
+
 model Contact {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String
-  email     String
-  message   String   @db.Text
-  createdAt DateTime @default(now()) @map("created_at")
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  email       String
+  message     String   @db.Text
+  repliedAt   DateTime? @map("replied_at")
+  repliedById String?   @map("replied_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  repliedBy   User?    @relation("ContactReplies", fields: [repliedById], references: [id], onDelete: SetNull)
 
   @@map("contacts")
 }
@@ -152,4 +173,10 @@ enum ApplicationStatus {
 enum UserRole {
   user
   admin
+}
+
+enum FileType {
+  document
+  video
+  other
 }

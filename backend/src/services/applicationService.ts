@@ -207,6 +207,43 @@ export const getApplicationWithFiles = async (
 };
 
 /**
+ * Withdraw a submitted application (submitted -> withdrawn)
+ */
+export const withdrawApplication = async (
+  id: string,
+  userId: string
+): Promise<ApplicationResponse> => {
+  // Get existing application
+  const existingApplication = await prisma.application.findUnique({
+    where: { id },
+  });
+
+  if (!existingApplication) {
+    throw new AppError('Application not found', 404);
+  }
+
+  // Verify ownership
+  if (existingApplication.userId !== userId) {
+    throw new AppError('Forbidden', 403);
+  }
+
+  // Check if application is submitted
+  if (existingApplication.status !== ApplicationStatus.submitted) {
+    throw new AppError('Only submitted applications can be withdrawn', 400);
+  }
+
+  // Update status to withdrawn
+  const application = await prisma.application.update({
+    where: { id },
+    data: {
+      status: ApplicationStatus.withdrawn,
+    },
+  });
+
+  return application;
+};
+
+/**
  * Delete an application (only if status is draft)
  */
 export const deleteApplication = async (id: string, userId: string): Promise<void> => {

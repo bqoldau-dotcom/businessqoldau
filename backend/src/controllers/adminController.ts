@@ -7,6 +7,7 @@ import {
   getApplicationStats,
   getAllContacts,
   getContactById,
+  replyToContact,
 } from '../services/adminService';
 import {
   exportApplicationsToExcel,
@@ -37,6 +38,10 @@ const getUsersSchema = z.object({
 const getContactsSchema = z.object({
   page: z.string().regex(/^\d+$/).transform(Number).optional(),
   limit: z.string().regex(/^\d+$/).transform(Number).optional(),
+});
+
+const replyToContactSchema = z.object({
+  message: z.string().min(10, 'Reply message must be at least 10 characters').max(2000, 'Reply message must be at most 2000 characters'),
 });
 
 /**
@@ -305,6 +310,71 @@ export const exportUsersHandler = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       error: 'Failed to export users',
+    });
+  }
+};
+
+/**
+ * POST /api/admin/contacts/:id/reply
+ * Reply to contact form submission
+ */
+export const replyToContactHandler = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = (req as any).userId; // Get userId from auth middleware
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+      });
+    }
+
+    // Validate UUID
+    if (!z.string().uuid().safeParse(id).success) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid contact ID',
+      });
+    }
+
+    const validation = replyToContactSchema.safeParse(req.body);
+
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid request body',
+        details: validation.error.issues,
+      });
+    }
+
+    const contact = await replyToContact(id, validation.data.message, userId);
+
+    return res.status(200).json({
+      success: true,
+      data: contact,
+      message: 'Reply sent successfully',
+    });
+  } catch (error: any) {
+    console.error('Reply to contact error:', error);
+
+    if (error.message === 'Contact not found') {
+      return res.status(404).json({
+        success: false,
+        error: error.message,
+      });
+    }
+
+    if (error.message === 'Failed to send email') {
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to send email. Please try again.',
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to reply to contact',
     });
   }
 };

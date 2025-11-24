@@ -60,4 +60,11 @@ router.get('/contacts', authenticate, adminAuth, adminController.getContactsHand
  */
 router.get('/contacts/:id', authenticate, adminAuth, adminController.getContactHandler);
 
+/**
+ * POST /api/admin/contacts/:id/reply
+ * Reply to contact form submission
+ * Body: { message: string }
+ */
+router.post('/contacts/:id/reply', authenticate, adminAuth, adminController.replyToContactHandler);
+
 export default router;

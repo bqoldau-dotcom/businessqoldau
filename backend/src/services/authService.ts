@@ -1,4 +1,6 @@
 import bcrypt from 'bcrypt';
+import fs from 'fs/promises';
+import path from 'path';
 import prisma from '../config/database';
 import { generateAccessToken, generateRefreshToken, getRefreshTokenExpiry, verifyRefreshToken } from '../utils/jwt';
 import { generateToken, generateVerificationCode, sendVerificationEmail, sendPasswordResetEmail } from '../utils/email';
@@ -371,4 +373,36 @@ export const getCurrentUser = async (userId: string) => {
   }
 
   return user;
+};
+
+export const deleteAccount = async (userId: string): Promise<void> => {
+  // Find user with applications
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      applications: true,
+    },
+  });
+
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  // Delete all uploaded files (business plans) from disk
+  for (const application of user.applications) {
+    if (application.planFilePath) {
+      try {
+        const filePath = path.join(process.cwd(), application.planFilePath);
+        await fs.unlink(filePath);
+      } catch (error) {
+        console.error(`Failed to delete file ${application.planFilePath}:`, error);
+        // Continue even if file deletion fails (file might not exist)
+      }
+    }
+  }
+
+  // Delete user from database (CASCADE will delete profile, applications, tokens, etc.)
+  await prisma.user.delete({
+    where: { id: userId },
+  });
 };

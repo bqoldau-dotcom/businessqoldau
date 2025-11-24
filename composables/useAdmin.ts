@@ -1,5 +1,16 @@
 import { ref } from 'vue'
 
+interface ApplicationFile {
+  id: string
+  applicationId: string
+  filePath: string
+  fileName: string
+  fileSize: number
+  mimeType: string
+  fileType: 'document' | 'video' | 'other'
+  createdAt: string
+}
+
 interface User {
   id: string
   email: string
@@ -20,9 +31,10 @@ interface Application {
   summary: string
   planFilePath: string | null
   videoFilePath: string | null
-  status: 'draft' | 'submitted'
+  status: 'draft' | 'submitted' | 'accepted' | 'rejected' | 'revision' | 'withdrawn'
   createdAt: string
   updatedAt: string
+  files?: ApplicationFile[]
   user?: {
     email: string
     profile?: {
@@ -38,6 +50,12 @@ interface Contact {
   name: string
   email: string
   message: string
+  repliedAt?: string | null
+  repliedBy?: {
+    id: string
+    email: string
+    role: string
+  } | null
   createdAt: string
 }
 
@@ -148,17 +166,23 @@ export const useAdmin = () => {
    */
   const updateApplicationStatus = async (
     applicationId: string,
-    status: 'draft' | 'submitted'
+    status: 'draft' | 'submitted' | 'accepted' | 'rejected' | 'revision' | 'withdrawn',
+    message?: string
   ) => {
     loading.value = true
     error.value = null
 
     try {
+      const body: { status: string; message?: string } = { status }
+      if (message) {
+        body.message = message
+      }
+
       const response = await fetchWithAuth<{ success: boolean; data: Application }>(
         `${config.public.apiUrl}/admin/applications/${applicationId}/status`,
         {
           method: 'PUT',
-          body: { status },
+          body,
         }
       )
 
@@ -388,6 +412,30 @@ export const useAdmin = () => {
     }
   }
 
+  /**
+   * Reply to contact form submission
+   */
+  const replyToContact = async (contactId: string, replyMessage: string) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await fetchWithAuth<{ success: boolean; data: Contact; message: string }>(
+        `${config.public.apiUrl}/admin/contacts/${contactId}/reply`,
+        {
+          method: 'POST',
+          body: { message: replyMessage },
+        }
+      )
+      return response.data
+    } catch (err: any) {
+      error.value = err.message || 'Failed to send reply'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     applications,
     users,
@@ -403,5 +451,6 @@ export const useAdmin = () => {
     getContactById,
     exportApplications,
     exportUsers,
+    replyToContact,
   }
 }

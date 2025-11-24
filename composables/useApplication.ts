@@ -1,7 +1,18 @@
 import { ref } from 'vue'
 
 export type ApplicationCategory = 'starter' | 'active' | 'it'
-export type ApplicationStatus = 'draft' | 'submitted'
+export type ApplicationStatus = 'draft' | 'submitted' | 'accepted' | 'rejected' | 'revision' | 'withdrawn'
+
+export interface ApplicationFile {
+  id: string
+  applicationId: string
+  filePath: string
+  fileName: string
+  fileSize: number
+  mimeType: string
+  fileType: 'document' | 'video' | 'other'
+  createdAt: string
+}
 
 export interface Application {
   id: string
@@ -13,6 +24,7 @@ export interface Application {
   status: ApplicationStatus
   createdAt: string
   updatedAt: string
+  files?: ApplicationFile[]
 }
 
 export interface ApplicationInput {
@@ -37,8 +49,10 @@ export const useApplication = () => {
 
   const applications = useState<Application[]>('applications', () => [])
   const currentApplication = useState<Application | null>('currentApplication', () => null)
+  const applicationFiles = useState<ApplicationFile[]>('applicationFiles', () => [])
   const loading = ref(false)
   const uploadProgress = ref(0)
+  const uploadingFiles = ref<Map<string, number>>(new Map())
   const error = ref<string | null>(null)
 
   /**
@@ -213,6 +227,38 @@ export const useApplication = () => {
   }
 
   /**
+   * Withdraw a submitted application (change status from submitted to withdrawn)
+   */
+  const withdrawApplication = async (id: string) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await fetchWithAuth<{ message: string; application: Application }>(
+        `${config.public.apiUrl}/applications/${id}/withdraw`,
+        {
+          method: 'POST',
+        }
+      )
+
+      currentApplication.value = response.application
+
+      // Update in the list
+      const index = applications.value.findIndex(app => app.id === id)
+      if (index !== -1) {
+        applications.value[index] = response.application
+      }
+
+      return response.application
+    } catch (err: any) {
+      error.value = err?.data?.message || 'Failed to withdraw application'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
    * Upload a file (business plan or video) for an application
    * Uses native fetch with FormData for file upload with progress tracking
    */
@@ -307,12 +353,197 @@ export const useApplication = () => {
     }
   }
 
+  /**
+   * Get all files for a specific application
+   */
+  const getApplicationFiles = async (applicationId: string) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await fetchWithAuth<{ message: string; files: ApplicationFile[] }>(
+        `${config.public.apiUrl}/applications/${applicationId}/files`
+      )
+
+      applicationFiles.value = response.files
+      return response.files
+    } catch (err: any) {
+      error.value = err?.data?.message || 'Failed to fetch application files'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Upload multiple files for an application
+   * Supports up to 10 files
+   */
+  const uploadFiles = async (
+    applicationId: string,
+    files: File[],
+    onProgress?: (fileId: string, progress: UploadProgressEvent) => void
+  ) => {
+    if (files.length === 0) {
+      throw new Error('No files selected')
+    }
+
+    if (files.length > 10) {
+      throw new Error('Maximum 10 files allowed')
+    }
+
+    loading.value = true
+    error.value = null
+
+    try {
+      const formData = new FormData()
+
+      // Append all files to FormData
+      files.forEach(file => {
+        formData.append('files', file)
+      })
+
+      const uploadedFiles = await new Promise<ApplicationFile[]>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const percentage = Math.round((event.loaded / event.total) * 100)
+            uploadProgress.value = percentage
+
+            if (onProgress) {
+              onProgress('batch', {
+                loaded: event.loaded,
+                total: event.total,
+                percentage,
+              })
+            }
+          }
+        })
+
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const data = JSON.parse(xhr.responseText)
+              resolve(data.files || [])
+            } catch (err) {
+              reject(new Error('Failed to parse response'))
+            }
+          } else {
+            try {
+              const errorData = JSON.parse(xhr.responseText)
+              reject(new Error(errorData.message || 'Upload failed'))
+            } catch {
+              reject(new Error(`Upload failed with status ${xhr.status}`))
+            }
+          }
+        })
+
+        xhr.addEventListener('error', () => {
+          reject(new Error('Network error during upload'))
+        })
+
+        xhr.addEventListener('abort', () => {
+          reject(new Error('Upload cancelled'))
+        })
+
+        const headers = getAuthHeaders()
+        xhr.open('POST', `${config.public.apiUrl}/applications/${applicationId}/files/upload`)
+
+        if (headers.Authorization) {
+          xhr.setRequestHeader('Authorization', headers.Authorization)
+        }
+
+        xhr.send(formData)
+      })
+
+      // Refresh application files list
+      await getApplicationFiles(applicationId)
+
+      return uploadedFiles
+    } catch (err: any) {
+      error.value = err?.message || 'Failed to upload files'
+      throw err
+    } finally {
+      loading.value = false
+      uploadProgress.value = 0
+    }
+  }
+
+  /**
+   * Delete a specific file from an application
+   */
+  const deleteFile = async (applicationId: string, fileId: string) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      await fetchWithAuth<{ message: string }>(
+        `${config.public.apiUrl}/applications/${applicationId}/files/${fileId}`,
+        {
+          method: 'DELETE',
+        }
+      )
+
+      // Remove from the list
+      applicationFiles.value = applicationFiles.value.filter(file => file.id !== fileId)
+    } catch (err: any) {
+      error.value = err?.data?.message || 'Failed to delete file'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Download a specific file
+   */
+  const downloadFile = async (applicationId: string, fileId: string) => {
+    try {
+      const file = applicationFiles.value.find(f => f.id === fileId)
+      if (!file) {
+        throw new Error('File not found')
+      }
+
+      // Create download link
+      const downloadUrl = `${config.public.apiUrl}/applications/${applicationId}/files/${fileId}/download`
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = file.fileName
+      link.target = '_blank'
+
+      // Add auth header via fetch and create blob URL
+      const headers = getAuthHeaders()
+      const response = await fetch(downloadUrl, { headers })
+
+      if (!response.ok) {
+        throw new Error('Download failed')
+      }
+
+      const blob = await response.blob()
+      const blobUrl = window.URL.createObjectURL(blob)
+      link.href = blobUrl
+
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      // Clean up blob URL
+      window.URL.revokeObjectURL(blobUrl)
+    } catch (err: any) {
+      error.value = err?.message || 'Failed to download file'
+      throw err
+    }
+  }
+
   return {
     applications,
     currentApplication,
     application: currentApplication, // Alias for single application
+    applicationFiles,
     loading,
     uploadProgress,
+    uploadingFiles,
     error,
     getApplications,
     fetchApplications: getApplications, // Alias for consistency
@@ -321,6 +552,11 @@ export const useApplication = () => {
     updateApplication,
     deleteApplication,
     submitApplication,
+    withdrawApplication,
     uploadFile,
+    getApplicationFiles,
+    uploadFiles,
+    deleteFile,
+    downloadFile,
   }
 }

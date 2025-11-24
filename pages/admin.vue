@@ -137,6 +137,22 @@
         <div class="bg-white rounded-lg shadow-sm border p-4">
           <div class="flex flex-wrap gap-4">
             <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Статус</label>
+              <select
+                v-model="filters.status"
+                @change="loadApplications"
+                class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Все статусы</option>
+                <option value="draft">Черновик</option>
+                <option value="submitted">Отправлено</option>
+                <option value="accepted">Принято</option>
+                <option value="rejected">Отклонено</option>
+                <option value="revision">На доработке</option>
+                <option value="withdrawn">Отозвано</option>
+              </select>
+            </div>
+            <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Категория</label>
               <select
                 v-model="filters.category"
@@ -176,13 +192,14 @@
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Пользователь</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Категория</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата создания</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-200">
                 <tr v-if="applications.length === 0">
-                  <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                  <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                     Заявок не найдено
                   </td>
                 </tr>
@@ -197,6 +214,21 @@
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span class="text-sm text-gray-900">{{ getCategoryLabel(app.category) }}</span>
                   </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span
+                      class="px-2 py-1 text-xs font-medium rounded-full"
+                      :class="{
+                        'bg-yellow-100 text-yellow-800': app.status === 'draft',
+                        'bg-blue-100 text-blue-800': app.status === 'submitted',
+                        'bg-green-100 text-green-800': app.status === 'accepted',
+                        'bg-red-100 text-red-800': app.status === 'rejected',
+                        'bg-indigo-100 text-indigo-800': app.status === 'revision',
+                        'bg-gray-100 text-gray-800': app.status === 'withdrawn'
+                      }"
+                    >
+                      {{ getStatusLabel(app.status) }}
+                    </span>
+                  </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {{ new Date(app.createdAt).toLocaleDateString('ru-RU') }}
                   </td>
@@ -205,27 +237,18 @@
                       <button @click="viewApplication(app)" class="text-blue-600 hover:text-blue-800 font-medium">
                         Посмотреть
                       </button>
-                      <a
-                        v-if="app.planFilePath"
-                        :href="`${apiUrl.replace('/api', '')}/${app.planFilePath}`"
-                        download
-                        target="_blank"
-                        class="text-green-600 hover:text-green-800 transition-colors"
-                        title="Скачать бизнес-план"
-                      >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                      <div v-if="app.files && app.files.length > 0" class="flex items-center gap-1.5">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
                         </svg>
-                      </a>
-                      <span
-                        v-else
-                        class="text-gray-300"
-                        title="Файл не загружен"
-                      >
+                        <span class="text-green-700 font-medium">{{ app.files.length }} {{ app.files.length === 1 ? 'файл' : app.files.length < 5 ? 'файла' : 'файлов' }}</span>
+                      </div>
+                      <div v-else class="flex items-center gap-1.5 text-gray-400" title="Файлы не загружены">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
                         </svg>
-                      </span>
+                        <span class="text-gray-500 text-xs">нет файлов</span>
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -448,13 +471,22 @@
                     <span class="text-xs text-gray-500">
                       {{ contact.email }}
                     </span>
+                    <span v-if="contact.repliedAt" class="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                      </svg>
+                      Отвечено
+                    </span>
                   </div>
                   <p class="text-sm text-gray-600 line-clamp-2">
                     {{ contact.message }}
                   </p>
                 </div>
-                <div class="ml-4 flex-shrink-0 text-xs text-gray-500">
-                  {{ formatDate(contact.createdAt) }}
+                <div class="ml-4 flex-shrink-0 text-right">
+                  <div class="text-xs text-gray-500">{{ formatDate(contact.createdAt) }}</div>
+                  <div v-if="contact.repliedAt" class="text-xs text-green-600 font-medium mt-1">
+                    Ответ: {{ formatDate(contact.repliedAt) }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -836,39 +868,58 @@
           <div>
             <label class="block text-sm font-medium text-gray-500 mb-2">Описание бизнеса</label>
             <div class="bg-gray-50 rounded-lg p-4">
-              <p class="text-gray-900 whitespace-pre-wrap">{{ selectedApplication.summary }}</p>
+              <p class="text-gray-900 whitespace-pre-wrap break-words overflow-wrap-anywhere">{{ selectedApplication.summary }}</p>
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-500 mb-2">Бизнес-план</label>
-            <div class="flex items-center gap-4">
-              <div class="flex items-center gap-2">
-                <svg
-                  class="w-5 h-5"
-                  :class="selectedApplication.planFilePath ? 'text-green-600' : 'text-gray-400'"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                <span :class="selectedApplication.planFilePath ? 'text-green-600 font-medium' : 'text-gray-500'">
-                  {{ selectedApplication.planFilePath ? 'Файл загружен' : 'Файл не загружен' }}
-                </span>
-              </div>
-              <a
-                v-if="selectedApplication.planFilePath"
-                :href="`${apiUrl.replace('/api', '')}/${selectedApplication.planFilePath}`"
-                download
-                target="_blank"
-                class="btn-primary text-sm inline-flex items-center gap-2"
+            <label class="block text-sm font-medium text-gray-500 mb-2">
+              Прикрепленные файлы ({{ selectedApplication.files?.length || 0 }})
+            </label>
+
+            <!-- Files List -->
+            <div v-if="selectedApplication.files && selectedApplication.files.length > 0" class="space-y-2">
+              <div
+                v-for="file in selectedApplication.files"
+                :key="file.id"
+                class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                </svg>
-                Скачать файл
-              </a>
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <!-- File Icon -->
+                  <svg class="w-6 h-6 flex-shrink-0" :class="getFileIconColor(file.mimeType)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                  </svg>
+
+                  <!-- File Info -->
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">{{ file.fileName }}</p>
+                    <p class="text-xs text-gray-500">
+                      {{ formatFileSize(file.fileSize) }} • {{ new Date(file.createdAt).toLocaleDateString('ru-RU') }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Download Button -->
+                <a
+                  :href="`${apiUrl.replace('/api', '')}/${file.filePath}`"
+                  download
+                  target="_blank"
+                  class="flex-shrink-0 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm inline-flex items-center gap-2"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                  </svg>
+                  Скачать
+                </a>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else class="flex items-center gap-2 text-gray-500 p-3 bg-gray-50 rounded-lg">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+              </svg>
+              <span class="text-sm">Файлы не загружены</span>
             </div>
           </div>
 
@@ -881,6 +932,93 @@
               <label class="block text-sm font-medium text-gray-500 mb-1">Последнее обновление</label>
               <p class="text-gray-900">{{ new Date(selectedApplication.updatedAt).toLocaleString('ru-RU') }}</p>
             </div>
+          </div>
+
+          <!-- Admin Actions (only for submitted applications) -->
+          <div v-if="selectedApplication.status === 'submitted'" class="mt-8 pt-6 border-t border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Действия администратора</h3>
+
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Сопроводительное письмо *
+                </label>
+                <textarea
+                  v-model="statusChangeMessage"
+                  rows="4"
+                  class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Введите сообщение для пользователя (минимум 10 символов)..."
+                  :disabled="statusChangeLoading"
+                ></textarea>
+                <p class="text-xs text-gray-500 mt-1">
+                  {{ statusChangeMessage.length }} / 1000 символов (минимум 10)
+                </p>
+              </div>
+
+              <div v-if="statusChangeError" class="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p class="text-red-700 text-sm">{{ statusChangeError }}</p>
+              </div>
+
+              <div v-if="statusChangeSuccess" class="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p class="text-green-700 text-sm">✓ Статус успешно изменен, письмо отправлено пользователю!</p>
+              </div>
+
+              <div class="flex gap-3">
+                <button
+                  @click="handleAcceptApplication"
+                  :disabled="statusChangeLoading || statusChangeMessage.length < 10"
+                  class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <svg v-if="!statusChangeLoading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  <div v-if="statusChangeLoading" class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  {{ statusChangeLoading ? 'Обработка...' : 'Принять заявку' }}
+                </button>
+
+                <button
+                  @click="handleRevisionApplication"
+                  :disabled="statusChangeLoading || statusChangeMessage.length < 10"
+                  class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <svg v-if="!statusChangeLoading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                  </svg>
+                  <div v-if="statusChangeLoading" class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  {{ statusChangeLoading ? 'Обработка...' : 'Отправить на доработку' }}
+                </button>
+
+                <button
+                  @click="handleRejectApplication"
+                  :disabled="statusChangeLoading || statusChangeMessage.length < 10"
+                  class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <svg v-if="!statusChangeLoading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                  <div v-if="statusChangeLoading" class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  {{ statusChangeLoading ? 'Обработка...' : 'Отклонить заявку' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status Badge (for accepted/rejected/revision applications) -->
+          <div v-if="selectedApplication.status === 'accepted' || selectedApplication.status === 'rejected' || selectedApplication.status === 'revision'" class="mt-6 p-4 rounded-lg" :class="{
+            'bg-green-50 border border-green-200': selectedApplication.status === 'accepted',
+            'bg-red-50 border border-red-200': selectedApplication.status === 'rejected',
+            'bg-blue-50 border border-blue-200': selectedApplication.status === 'revision'
+          }">
+            <p class="font-semibold" :class="{
+              'text-green-800': selectedApplication.status === 'accepted',
+              'text-red-800': selectedApplication.status === 'rejected',
+              'text-blue-800': selectedApplication.status === 'revision'
+            }">
+              {{ selectedApplication.status === 'accepted' ? 'Заявка принята' : selectedApplication.status === 'rejected' ? 'Заявка отклонена' : 'Заявка отправлена на доработку' }}
+            </p>
+            <p class="text-sm text-gray-600 mt-1">
+              {{ selectedApplication.status === 'revision' ? 'Пользователь может внести изменения и отправить заявку повторно.' : 'Решение уже принято по данной заявке.' }}
+            </p>
           </div>
         </div>
       </div>
@@ -924,27 +1062,79 @@
           <div>
             <label class="block text-sm font-medium text-gray-500 mb-2">Обращение</label>
             <div class="bg-gray-50 rounded-lg p-4">
-              <p class="text-gray-900 whitespace-pre-wrap">{{ selectedContact.message }}</p>
+              <p class="text-gray-900 whitespace-pre-wrap break-words overflow-wrap-anywhere">{{ selectedContact.message }}</p>
             </div>
           </div>
 
-          <!-- Actions -->
-          <div class="flex justify-end gap-3">
-            <a
-              :href="`mailto:${selectedContact.email}?subject=Ответ на ваше обращение&body=Здравствуйте, ${selectedContact.name}!%0A%0AСпасибо за ваше обращение:%0A%0A${selectedContact.message}%0A%0A---%0AОтвет:%0A`"
-              class="btn-primary text-sm inline-flex items-center gap-2"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          <!-- Reply Status (if already replied) -->
+          <div v-if="selectedContact.repliedAt" class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
               </svg>
-              Ответить
-            </a>
-            <button
-              @click="selectedContact = null"
-              class="btn-secondary text-sm"
-            >
-              Закрыть
-            </button>
+              <span class="font-semibold text-green-800">На это обращение уже был отправлен ответ</span>
+            </div>
+            <div class="text-sm text-green-700 space-y-1">
+              <p>
+                <span class="font-medium">Дата ответа:</span> {{ formatDate(selectedContact.repliedAt) }}
+              </p>
+              <p v-if="selectedContact.repliedBy">
+                <span class="font-medium">Ответил:</span> {{ selectedContact.repliedBy.email }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Reply Form -->
+          <div class="mt-6 pt-6 border-t border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Ответ</h3>
+
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Сообщение для пользователя *
+                </label>
+                <textarea
+                  v-model="contactReplyMessage"
+                  rows="5"
+                  class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Введите ваш ответ (минимум 10 символов)..."
+                  :disabled="contactReplyLoading || contactReplySuccess"
+                ></textarea>
+                <p class="text-xs text-gray-500 mt-1">
+                  {{ contactReplyMessage.length }} / 2000 символов (минимум 10)
+                </p>
+              </div>
+
+              <div v-if="contactReplyError" class="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p class="text-red-700 text-sm">{{ contactReplyError }}</p>
+              </div>
+
+              <div v-if="contactReplySuccess" class="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p class="text-green-700 text-sm">✓ Ответ успешно отправлен на email пользователя!</p>
+              </div>
+
+              <div class="flex gap-3">
+                <button
+                  @click="handleReplyToContact"
+                  :disabled="contactReplyLoading || contactReplySuccess || contactReplyMessage.length < 10"
+                  class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <svg v-if="!contactReplyLoading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                  </svg>
+                  <div v-if="contactReplyLoading" class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  {{ contactReplyLoading ? 'Отправка...' : 'Отправить ответ на email' }}
+                </button>
+
+                <button
+                  @click="selectedContact = null"
+                  :disabled="contactReplyLoading"
+                  class="btn-secondary text-sm px-6 py-3"
+                >
+                  {{ contactReplySuccess ? 'Готово' : 'Закрыть' }}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -984,16 +1174,28 @@ definePageMeta({
 })
 
 const { user, logout } = useAuth()
-const { applications, users, contacts, stats, loading, error, getAllApplications, updateApplicationStatus, getAllUsers, getStats, getAllContacts, getContactById, exportApplications, exportUsers } = useAdmin()
+const { applications, users, contacts, stats, loading, error, getAllApplications, updateApplicationStatus, getAllUsers, getStats, getAllContacts, getContactById, exportApplications, exportUsers, replyToContact } = useAdmin()
 const { activeTemplate, uploadTemplate, getActiveTemplate, downloadTemplate, deleteTemplate } = useTemplate()
 const { settings: periodSettings, periodStatus, loading: settingsLoading, error: settingsError, getApplicationSettings, updateApplicationSettings, formatDateForInput, formatDate: formatSettingsDate } = useSettings()
 
 const config = useRuntimeConfig()
 const apiUrl = config.public.apiUrl
 
+// Contact reply state
+const contactReplyMessage = ref('')
+const contactReplyLoading = ref(false)
+const contactReplyError = ref<string | null>(null)
+const contactReplySuccess = ref(false)
+
+// Status change state
+const statusChangeMessage = ref('')
+const statusChangeLoading = ref(false)
+const statusChangeError = ref<string | null>(null)
+const statusChangeSuccess = ref(false)
+
 const activeTab = ref<'applications' | 'users' | 'templates' | 'contacts' | 'stats' | 'settings'>('applications')
 const filters = ref({
-  status: 'submitted' as '' | 'draft' | 'submitted',
+  status: '' as '' | 'draft' | 'submitted' | 'accepted' | 'rejected' | 'revision' | 'withdrawn',
   category: '' as '' | 'starter' | 'active' | 'it',
   page: 1,
   limit: 20
@@ -1298,7 +1500,7 @@ const changeUserPage = (page: number) => {
 
 const resetFilters = () => {
   filters.value = {
-    status: 'submitted',
+    status: '',
     category: '',
     page: 1,
     limit: 20
@@ -1322,6 +1524,18 @@ const getCategoryLabel = (category: string) => {
     it: 'IT проект'
   }
   return labels[category] || category
+}
+
+const getStatusLabel = (status: string) => {
+  const labels: Record<string, string> = {
+    draft: 'Черновик',
+    submitted: 'Отправлено',
+    accepted: 'Принято',
+    rejected: 'Отклонено',
+    revision: 'На доработке',
+    withdrawn: 'Отозвано'
+  }
+  return labels[status] || status
 }
 
 const loadContacts = async (page: number = 1) => {
@@ -1493,6 +1707,157 @@ watch(activeTab, (newTab) => {
   }
 })
 
+// Watch selectedApplication to reset status change form
+watch(selectedApplication, (newApp) => {
+  if (newApp) {
+    statusChangeMessage.value = ''
+    statusChangeError.value = null
+    statusChangeSuccess.value = false
+  }
+})
+
+// Handle accept application
+const handleAcceptApplication = async () => {
+  if (!selectedApplication.value || statusChangeMessage.value.length < 10) return
+
+  const confirmed = confirm('Вы уверены, что хотите ПРИНЯТЬ эту заявку? Пользователь получит уведомление на почту.')
+  if (!confirmed) return
+
+  statusChangeLoading.value = true
+  statusChangeError.value = null
+  statusChangeSuccess.value = false
+
+  try {
+    await updateApplicationStatus(
+      selectedApplication.value.id,
+      'accepted',
+      statusChangeMessage.value
+    )
+
+    statusChangeSuccess.value = true
+    statusChangeMessage.value = ''
+
+    // Reload applications list
+    await loadApplications()
+
+    // Close modal after 2 seconds
+    setTimeout(() => {
+      selectedApplication.value = null
+    }, 2000)
+  } catch (err: any) {
+    statusChangeError.value = err.data?.error || 'Не удалось изменить статус заявки'
+  } finally {
+    statusChangeLoading.value = false
+  }
+}
+
+// Handle revision application
+const handleRevisionApplication = async () => {
+  if (!selectedApplication.value || statusChangeMessage.value.length < 10) return
+
+  const confirmed = confirm('Вы уверены, что хотите отправить эту заявку на ДОРАБОТКУ? Пользователь получит уведомление на почту и сможет внести изменения.')
+  if (!confirmed) return
+
+  statusChangeLoading.value = true
+  statusChangeError.value = null
+  statusChangeSuccess.value = false
+
+  try {
+    await updateApplicationStatus(
+      selectedApplication.value.id,
+      'revision',
+      statusChangeMessage.value
+    )
+
+    statusChangeSuccess.value = true
+    statusChangeMessage.value = ''
+
+    // Reload applications list
+    await loadApplications()
+
+    // Close modal after 2 seconds
+    setTimeout(() => {
+      selectedApplication.value = null
+    }, 2000)
+  } catch (err: any) {
+    statusChangeError.value = err.data?.error || 'Не удалось изменить статус заявки'
+  } finally {
+    statusChangeLoading.value = false
+  }
+}
+
+// Handle reject application
+const handleRejectApplication = async () => {
+  if (!selectedApplication.value || statusChangeMessage.value.length < 10) return
+
+  const confirmed = confirm('Вы уверены, что хотите ОТКЛОНИТЬ эту заявку? Пользователь получит уведомление на почту.')
+  if (!confirmed) return
+
+  statusChangeLoading.value = true
+  statusChangeError.value = null
+  statusChangeSuccess.value = false
+
+  try {
+    await updateApplicationStatus(
+      selectedApplication.value.id,
+      'rejected',
+      statusChangeMessage.value
+    )
+
+    statusChangeSuccess.value = true
+    statusChangeMessage.value = ''
+
+    // Reload applications list
+    await loadApplications()
+
+    // Close modal after 2 seconds
+    setTimeout(() => {
+      selectedApplication.value = null
+    }, 2000)
+  } catch (err: any) {
+    statusChangeError.value = err.data?.error || 'Не удалось изменить статус заявки'
+  } finally {
+    statusChangeLoading.value = false
+  }
+}
+
+// Handle reply to contact
+const handleReplyToContact = async () => {
+  if (!selectedContact.value || contactReplyMessage.value.length < 10) return
+
+  const confirmed = confirm(`Вы уверены, что хотите отправить ответ на email ${selectedContact.value.email}?`)
+  if (!confirmed) return
+
+  contactReplyLoading.value = true
+  contactReplyError.value = null
+  contactReplySuccess.value = false
+
+  try {
+    await replyToContact(selectedContact.value.id, contactReplyMessage.value)
+    contactReplySuccess.value = true
+    contactReplyMessage.value = ''
+
+    // Close modal after 2 seconds
+    setTimeout(() => {
+      selectedContact.value = null
+      contactReplySuccess.value = false
+    }, 2000)
+  } catch (err: any) {
+    contactReplyError.value = err.data?.error || 'Не удалось отправить ответ'
+  } finally {
+    contactReplyLoading.value = false
+  }
+}
+
+// Reset contact reply form when modal is closed
+watch(selectedContact, (newContact) => {
+  if (newContact) {
+    contactReplyMessage.value = ''
+    contactReplyError.value = null
+    contactReplySuccess.value = false
+  }
+})
+
 // Debounce for user search filter
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null
 watch(() => userFilters.value.search, () => {
@@ -1504,6 +1869,23 @@ watch(() => userFilters.value.search, () => {
     loadUsers()
   }, 500) // 500ms delay
 })
+
+// Helper: Format file size
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i]
+}
+
+// Helper: Get file icon color by MIME type
+const getFileIconColor = (mimeType: string): string => {
+  if (mimeType.includes('pdf')) return 'text-red-600'
+  if (mimeType.includes('word') || mimeType.includes('document')) return 'text-blue-600'
+  if (mimeType.includes('video')) return 'text-purple-600'
+  return 'text-gray-600'
+}
 
 useSeoMeta({
   title: 'Админ-панель - Business Qoldau 2025',

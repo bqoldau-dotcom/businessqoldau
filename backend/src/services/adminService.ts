@@ -22,7 +22,7 @@ export const getAllApplications = async (params: {
     where.category = category;
   }
 
-  // Get applications with user info
+  // Get applications with user info and files
   const [applications, total] = await Promise.all([
     prisma.application.findMany({
       where,
@@ -41,6 +41,11 @@ export const getAllApplications = async (params: {
                 city: true,
               },
             },
+          },
+        },
+        files: {
+          orderBy: {
+            createdAt: 'asc',
           },
         },
       },
@@ -67,11 +72,27 @@ export const getAllApplications = async (params: {
  */
 export const updateApplicationStatus = async (
   applicationId: string,
-  status: ApplicationStatus
+  status: ApplicationStatus,
+  message?: string
 ) => {
   // Check if application exists
   const application = await prisma.application.findUnique({
     where: { id: applicationId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          profile: {
+            select: {
+              fullName: true,
+              phone: true,
+              city: true,
+            },
+          },
+        },
+      },
+    },
   });
 
   if (!application) {
@@ -98,6 +119,29 @@ export const updateApplicationStatus = async (
       },
     },
   });
+
+  // Send email notification if status is accepted, rejected, or revision and message is provided
+  if ((status === 'accepted' || status === 'rejected' || status === 'revision') && message) {
+    const { sendApplicationStatusEmail } = await import('../utils/email');
+
+    const fullName = updated.user.profile?.fullName || 'Участник';
+
+    try {
+      await sendApplicationStatusEmail(
+        updated.user.email,
+        fullName,
+        status as 'accepted' | 'rejected' | 'revision',
+        message,
+        {
+          category: updated.category,
+          createdAt: updated.createdAt,
+        }
+      );
+    } catch (emailError) {
+      console.error('Failed to send status email:', emailError);
+      // Don't throw error - status update should succeed even if email fails
+    }
+  }
 
   return updated;
 };
@@ -205,6 +249,15 @@ export const getAllContacts = async (params: {
     prisma.contact.findMany({
       skip,
       take: limit,
+      include: {
+        repliedBy: {
+          select: {
+            id: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -229,6 +282,15 @@ export const getAllContacts = async (params: {
 export const getContactById = async (contactId: string) => {
   const contact = await prisma.contact.findUnique({
     where: { id: contactId },
+    include: {
+      repliedBy: {
+        select: {
+          id: true,
+          email: true,
+          role: true,
+        },
+      },
+    },
   });
 
   if (!contact) {
@@ -311,6 +373,59 @@ export const getApplicationStats = async () => {
     registrationsByDay,
     contactsByDay,
   };
+};
+
+/**
+ * Reply to contact form submission
+ */
+export const replyToContact = async (
+  contactId: string,
+  replyMessage: string,
+  repliedById: string
+) => {
+  // Check if contact exists
+  const contact = await prisma.contact.findUnique({
+    where: { id: contactId },
+  });
+
+  if (!contact) {
+    throw new Error('Contact not found');
+  }
+
+  // Send reply email
+  const { sendContactReplyEmail } = await import('../utils/email');
+
+  try {
+    await sendContactReplyEmail(
+      contact.email,
+      contact.name,
+      contact.message,
+      replyMessage
+    );
+  } catch (emailError) {
+    console.error('Failed to send reply email:', emailError);
+    throw new Error('Failed to send email');
+  }
+
+  // Update contact with reply information
+  const updatedContact = await prisma.contact.update({
+    where: { id: contactId },
+    data: {
+      repliedAt: new Date(),
+      repliedById,
+    },
+    include: {
+      repliedBy: {
+        select: {
+          id: true,
+          email: true,
+          role: true,
+        },
+      },
+    },
+  });
+
+  return updatedContact;
 };
 
 /**

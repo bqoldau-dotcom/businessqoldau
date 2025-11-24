@@ -187,6 +187,37 @@ export const submitApplication = async (
 };
 
 /**
+ * POST /api/applications/:id/withdraw
+ * Withdraw a submitted application (submitted -> withdrawn)
+ */
+export const withdrawApplication = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.userId) {
+      throw new AppError('Unauthorized', 401);
+    }
+
+    const { id } = req.params;
+
+    if (!id) {
+      throw new AppError('Application ID is required', 400);
+    }
+
+    const application = await applicationService.withdrawApplication(id, req.userId);
+
+    res.json({
+      message: 'Application withdrawn successfully',
+      application,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * DELETE /api/applications/:id
  * Delete an application (only draft status)
  */

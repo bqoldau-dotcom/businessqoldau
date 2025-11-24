@@ -39,4 +39,7 @@ router.post('/reset-password', authController.resetPassword);
 // GET /api/auth/me - Get current user info
 router.get('/me', authenticate, authController.getCurrentUser);
 
+// DELETE /api/auth/account - Delete user account
+router.delete('/account', authenticate, authController.deleteAccount);
+
 export default router;

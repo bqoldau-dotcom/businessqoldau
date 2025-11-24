@@ -161,6 +161,20 @@ export const useAuth = () => {
     }
   }
 
+  const deleteAccount = async () => {
+    await fetchWithAuth(`${config.public.apiUrl}/auth/account`, {
+      method: 'DELETE',
+    })
+
+    // Clear tokens and user data
+    accessToken.value = null
+    refreshToken.value = null
+    user.value = null
+
+    // Redirect to home page
+    router.push('/')
+  }
+
   return {
     user,
     isAuthenticated,
@@ -173,5 +187,6 @@ export const useAuth = () => {
     getAuthHeaders,
     fetchWithAuth,
     fetchCurrentUser,
+    deleteAccount,
   }
 }

@@ -217,3 +217,19 @@ export const getCurrentUser = async (req: AuthRequest, res: Response, next: Next
     next(error);
   }
 };
+
+export const deleteAccount = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    if (!req.userId) {
+      throw new AppError('Unauthorized', 401);
+    }
+
+    await authService.deleteAccount(req.userId);
+
+    res.json({
+      message: 'Account deleted successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};

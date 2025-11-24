@@ -53,7 +53,7 @@ const businessPlanFileFilter = (
   }
 };
 
-// Multer upload middleware for business plans
+// Multer upload middleware for business plans (single file - legacy)
 export const uploadBusinessPlan = multer({
   storage: businessPlanStorage,
   fileFilter: businessPlanFileFilter,
@@ -61,6 +61,16 @@ export const uploadBusinessPlan = multer({
     fileSize: MAX_FILE_SIZE_DOC,
   },
 }).single('planFile');
+
+// Multer upload middleware for multiple files (up to 10)
+export const uploadMultipleFiles = multer({
+  storage: businessPlanStorage,
+  fileFilter: businessPlanFileFilter,
+  limits: {
+    fileSize: MAX_FILE_SIZE_DOC, // 20MB per file
+    files: 10, // Maximum 10 files
+  },
+}).array('files', 10);
 
 // Storage configuration for templates
 const templateStorage = multer.diskStorage({
