@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Admin API Test Script
-API_URL="http://localhost:3001"
+API_URL="https://businessqoldau-997846271826.europe-west1.run.app"
 ADMIN_EMAIL="admin@businesscamp.kz"
 ADMIN_PASSWORD="Admin123456"
 
