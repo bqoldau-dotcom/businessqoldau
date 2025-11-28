@@ -474,7 +474,7 @@ const handleSendCode = async () => {
 
   try {
     const config = useRuntimeConfig()
-    const response = await $fetch(`${config.public.apiUrl}/api/auth/register`, {
+    const response = await $fetch(`${config.public.apiUrl}/auth/register`, {
       method: 'POST',
       body: {
         email: form.email,
