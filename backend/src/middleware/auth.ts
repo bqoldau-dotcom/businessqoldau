@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+// import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken'; // <--- Измените на это
 import { jwtConfig } from '../config/jwt';
 import { AppError } from './errorHandler';
 
