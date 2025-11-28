@@ -100,7 +100,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       baseUrl: process.env.BASE_URL || 'http://localhost:3000',
-      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'https://businessqoldau-997846271826.europe-west1.run.app/api'
+      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'https://businessqoldau-997846271826.europe-west1.run.app'
     }
   }
 })
