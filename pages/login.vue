@@ -485,7 +485,7 @@ const handleSendCode = async () => {
     })
 
     pendingUserId.value = (response as any).userId
-    // success.value = 'Код подтверждения отправлен на ваш email!'
+    success.value = 'Код подтверждения отправлен на ваш email!'
     registrationStep.value = 'verification'
 
     // Start cooldown
