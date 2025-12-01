@@ -1,4 +1,4 @@
-// import bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
 import fs from 'fs/promises';
 import path from 'path';
 import prisma from '../config/database';
@@ -44,7 +44,7 @@ export const register = async (input: RegisterInput): Promise<{ userId: string }
   }
 
   // Hash password
-  // const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+  const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
   // Create user and profile in a transaction
   const user = await prisma.user.create({
@@ -101,7 +101,7 @@ export const login = async (input: LoginInput): Promise<AuthResponse> => {
   }
 
   // Verify password
-  // const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+  const isValidPassword = await bcrypt.compare(password, user.passwordHash);
 
   if (!isValidPassword) {
     throw new AppError('Неверный email или пароль', 401);
@@ -338,7 +338,7 @@ export const resetPassword = async (email: string, code: string, newPassword: st
   }
 
   // Hash new password
-  // const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
 
   // Update user password
   await prisma.user.update({
