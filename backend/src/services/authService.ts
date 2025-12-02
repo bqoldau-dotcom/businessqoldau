@@ -50,7 +50,7 @@ export const register = async (input: RegisterInput): Promise<{ userId: string }
   const user = await prisma.user.create({
     data: {
       email,
-      passwordHash,
+      passwordHash: passwordHash,
       emailVerified: false, // Require email verification
       profile: {
         create: {
@@ -343,7 +343,7 @@ export const resetPassword = async (email: string, code: string, newPassword: st
   // Update user password
   await prisma.user.update({
     where: { id: user.id },
-    data: { passwordHash },
+    data: { passwordHash: passwordHash },
   });
 
   // Delete all reset tokens for this user
