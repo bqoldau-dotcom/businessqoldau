@@ -2,7 +2,7 @@
 
 **Инновационный грант Business Qoldau - Грант для предпринимателей Казахстана** - платформа конкурса для предпринимателей Казахстана с поддержкой русского и казахского языков.
 
-[![Статус](https://img.shields.io/badge/статус-production-brightgreen)](https://businessqoldau.kz)
+[![Статус](https://img.shields.io/badge/статус-в%20разработке-yellow)](https://github.com/your-repo/businessqoldau)
 [![Frontend](https://img.shields.io/badge/frontend-Nuxt%203-00DC82)](https://nuxt.com/)
 [![Backend](https://img.shields.io/badge/backend-Node.js%20%2B%20Express-339933)](https://nodejs.org/)
 [![База данных](https://img.shields.io/badge/БД-PostgreSQL%20%2B%20Prisma-336791)](https://www.postgresql.org/)
@@ -42,6 +42,13 @@ npm run dev  # http://localhost:3000
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:3001/api
 - Health check: http://localhost:3001/health
+
+## 📚 Документация
+
+- **[🏗️ Архитектура](ARCHITECTURE.md)** - архитектура системы, модель данных, API
+- **[💻 Разработка](DEVELOPMENT.md)** - руководство разработчика, команды, конфигурация
+- **[🚀 Деплой](DEPLOYMENT.md)** - развертывание на production сервере
+- **[🤖 Claude](CLAUDE.md)** - руководство для AI агента
 
 ## 🛠️ Технологический стек
 
@@ -83,6 +90,8 @@ npm run dev  # http://localhost:3000
 - **applications** - Заявки на конкурс
 - **contacts** - Контактные формы
 
+Подробнее см. [ARCHITECTURE.md](ARCHITECTURE.md#модель-данных)
+
 ## 🚀 Деплой
 
 ### Frontend (Vercel)
@@ -94,7 +103,9 @@ npm run dev  # http://localhost:3000
 1. Настройте PostgreSQL
 2. Настройте переменные окружения
 3. Запустите миграции: `npm run prisma:migrate`
-4. Запустите сервер с PM2: `pm2 start ecosystem.config.js`
+4. Запустите сервер: `npm start`
+
+Подробнее см. [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ## 📊 Статус проекта
 
@@ -102,14 +113,16 @@ npm run dev  # http://localhost:3000
 - Frontend: все страницы, i18n, аутентификация
 - Backend: аутентификация, JWT, email уведомления
 - База данных: схема, миграции
-- API для заявок и контактов
-- Загрузка файлов и шаблонов
-- Админ-панель со статистикой
-- Деплой на production (businessqoldau.kz)
 
 ### ⚠️ В разработке
-- Оптимизация и улучшения
-- Дополнительные функции по запросу
+- API для заявок и контактов
+- Загрузка файлов
+- Админ-панель
+
+### ❌ Планируется
+- Тестирование
+- Деплой на production
+- Мониторинг
 
 ## 🤝 Участие в разработке
 
@@ -161,6 +174,6 @@ businessqoldau/
 
 ---
 
-**📅 Обновлено**: 2025-11-15
-**👤 Проект**: Business Qoldau 2025
+**📅 Обновлено**: 2025-09-30  
+**👤 Проект**: Business Qoldau 2025  
 **🌐 Домен**: businessqoldau.kz

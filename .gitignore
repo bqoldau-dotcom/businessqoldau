@@ -36,4 +36,7 @@ backend/*.log
 # SQLite (if using for content)
 *.db
 *.db-journal
+image_svg/
 
+# Security - do not commit credentials
+ADMIN_CREDENTIALS.md

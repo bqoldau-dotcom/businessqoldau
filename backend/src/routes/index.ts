@@ -6,6 +6,8 @@ import contactRoutes from './contact';
 import adminRoutes from './adminRoutes';
 import templateRoutes from './templateRoutes';
 import settingsRoutes from './settingsRoutes';
+import juryRoutes from './juryRoutes';
+import finalistRoutes from './finalistRoutes';
 
 const router = Router();
 
@@ -22,6 +24,8 @@ router.get('', (req, res) => {
       admin: '/api/admin',
       templates: '/api/templates',
       settings: '/api/settings',
+      jury: '/api/jury',
+      finalists: '/api/finalists',
     },
   });
 });
@@ -34,5 +38,7 @@ router.use('/contacts', contactRoutes);
 router.use('/admin', adminRoutes);
 router.use('/templates', templateRoutes);
 router.use('/settings', settingsRoutes);
+router.use('/jury', juryRoutes);
+router.use('/finalists', finalistRoutes);
 
 export default router;
