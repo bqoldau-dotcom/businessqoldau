@@ -111,6 +111,38 @@
             </svg>
             <span>Период подачи</span>
           </button>
+
+          <div class="my-4 border-t border-gray-200"></div>
+
+          <button
+            @click="activeTab = 'jury'"
+            :class="[
+              'w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors text-left',
+              activeTab === 'jury'
+                ? 'bg-blue-50 text-blue-700'
+                : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+            ]"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <span>Жюри</span>
+          </button>
+
+          <button
+            @click="activeTab = 'finalists'"
+            :class="[
+              'w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors text-left',
+              activeTab === 'finalists'
+                ? 'bg-blue-50 text-blue-700'
+                : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+            ]"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+            </svg>
+            <span>Финалисты</span>
+          </button>
         </nav>
       </aside>
 
@@ -788,6 +820,259 @@
           </div>
         </div>
       </div>
+
+      <!-- Jury Tab -->
+      <div v-else-if="activeTab === 'jury'" class="space-y-6">
+        <div class="bg-white rounded-lg shadow-sm border p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">Члены жюри</h3>
+            <button @click="openJuryModal()" class="btn-primary">
+              + Добавить члена жюри
+            </button>
+          </div>
+
+          <!-- Loading State -->
+          <div v-if="juryLoading" class="text-center py-8">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p class="mt-2 text-gray-600">Загрузка...</p>
+          </div>
+
+          <!-- Error State -->
+          <div v-else-if="juryError" class="text-center py-8">
+            <div class="text-red-600 mb-2">Ошибка загрузки</div>
+            <button @click="loadJury" class="btn-primary text-sm">Попробовать снова</button>
+          </div>
+
+          <!-- Empty State -->
+          <div v-else-if="juryMembers.length === 0" class="text-center py-12 text-gray-500">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <p>Члены жюри не добавлены</p>
+          </div>
+
+          <!-- Jury Grid -->
+          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div
+              v-for="member in juryMembers"
+              :key="member.id"
+              class="border rounded-lg p-4 hover:shadow-md transition-shadow"
+              :class="{ 'opacity-50': !member.isActive }"
+            >
+              <div class="flex items-start gap-4">
+                <div class="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
+                  <img
+                    v-if="member.photoPath"
+                    :src="getJuryPhotoUrl(member.photoPath)"
+                    :alt="member.fullName"
+                    class="w-full h-full object-cover"
+                  />
+                  <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h4 class="font-medium text-gray-900 truncate">{{ member.fullName }}</h4>
+                  <p class="text-sm text-gray-600 truncate">{{ member.position }}</p>
+                  <p v-if="member.organization" class="text-xs text-gray-500 truncate">{{ member.organization }}</p>
+                  <span
+                    class="inline-block mt-2 px-2 py-0.5 text-xs rounded-full"
+                    :class="member.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
+                  >
+                    {{ member.isActive ? 'Активен' : 'Скрыт' }}
+                  </span>
+                </div>
+              </div>
+              <div class="flex gap-2 mt-4 pt-4 border-t">
+                <button
+                  @click="openJuryModal(member)"
+                  class="flex-1 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+                >
+                  Редактировать
+                </button>
+                <button
+                  @click="handleToggleJuryActive(member)"
+                  class="px-3 py-1.5 text-sm rounded"
+                  :class="member.isActive ? 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100' : 'bg-green-50 text-green-600 hover:bg-green-100'"
+                >
+                  {{ member.isActive ? 'Скрыть' : 'Показать' }}
+                </button>
+                <button
+                  @click="handleDeleteJury(member.id)"
+                  class="px-3 py-1.5 text-sm bg-red-50 text-red-600 rounded hover:bg-red-100"
+                >
+                  Удалить
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Finalists Tab -->
+      <div v-else-if="activeTab === 'finalists'" class="space-y-6">
+        <div class="bg-white rounded-lg shadow-sm border p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">Финалисты конкурса</h3>
+            <button @click="openFinalistModal()" class="btn-primary">
+              + Добавить финалиста
+            </button>
+          </div>
+
+          <!-- Filters -->
+          <div class="mb-6">
+            <select
+              v-model="finalistCategoryFilter"
+              @change="loadFinalists"
+              class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Все категории</option>
+              <option value="starter">Стартапы</option>
+              <option value="active">Активный бизнес</option>
+              <option value="it">IT проекты</option>
+            </select>
+          </div>
+
+          <!-- Loading State -->
+          <div v-if="finalistsLoading" class="text-center py-8">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p class="mt-2 text-gray-600">Загрузка...</p>
+          </div>
+
+          <!-- Error State -->
+          <div v-else-if="finalistsError" class="text-center py-8">
+            <div class="text-red-600 mb-2">Ошибка загрузки</div>
+            <button @click="loadFinalists" class="btn-primary text-sm">Попробовать снова</button>
+          </div>
+
+          <!-- Empty State -->
+          <div v-else-if="finalists.length === 0" class="text-center py-12 text-gray-500">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+            </svg>
+            <p>Финалисты не добавлены</p>
+          </div>
+
+          <!-- Finalists Table -->
+          <div v-else class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50 border-b">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Фото</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ФИО</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Проект</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Категория</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Место</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Действия</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr
+                  v-for="finalist in finalists"
+                  :key="finalist.id"
+                  class="hover:bg-gray-50"
+                  :class="{ 'opacity-50': !finalist.isActive }"
+                >
+                  <td class="px-4 py-3">
+                    <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+                      <img
+                        v-if="finalist.photoPath"
+                        :src="getFinalistPhotoUrl(finalist.photoPath)"
+                        :alt="finalist.fullName"
+                        class="w-full h-full object-cover"
+                      />
+                      <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="font-medium text-gray-900">{{ finalist.fullName }}</div>
+                    <div v-if="finalist.city" class="text-xs text-gray-500">{{ finalist.city }}</div>
+                  </td>
+                  <td class="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">
+                    {{ finalist.projectName }}
+                  </td>
+                  <td class="px-4 py-3">
+                    <span
+                      class="px-2 py-1 text-xs font-medium rounded-full"
+                      :class="{
+                        'bg-blue-100 text-blue-800': finalist.category === 'starter',
+                        'bg-green-100 text-green-800': finalist.category === 'active',
+                        'bg-purple-100 text-purple-800': finalist.category === 'it'
+                      }"
+                    >
+                      {{ getCategoryLabel(finalist.category) }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="flex items-center gap-1">
+                      <span v-if="finalist.place" class="font-bold text-lg" :class="{
+                        'text-yellow-500': finalist.place === 1,
+                        'text-gray-400': finalist.place === 2,
+                        'text-orange-600': finalist.place === 3
+                      }">
+                        {{ finalist.place }}
+                      </span>
+                      <span v-else class="text-gray-400">—</span>
+                      <span v-if="finalist.isWinner" class="ml-1">
+                        <svg class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                        </svg>
+                      </span>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span
+                      class="px-2 py-0.5 text-xs rounded-full"
+                      :class="finalist.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
+                    >
+                      {{ finalist.isActive ? 'Активен' : 'Скрыт' }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="flex gap-2">
+                      <button
+                        @click="openFinalistModal(finalist)"
+                        class="text-blue-600 hover:text-blue-800"
+                        title="Редактировать"
+                      >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                      </button>
+                      <button
+                        @click="handleToggleFinalistActive(finalist)"
+                        :class="finalist.isActive ? 'text-yellow-600 hover:text-yellow-800' : 'text-green-600 hover:text-green-800'"
+                        :title="finalist.isActive ? 'Скрыть' : 'Показать'"
+                      >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path v-if="finalist.isActive" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                          <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                      </button>
+                      <button
+                        @click="handleDeleteFinalist(finalist.id)"
+                        class="text-red-600 hover:text-red-800"
+                        title="Удалить"
+                      >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
       </main>
     </div>
 
@@ -949,6 +1234,240 @@
         </div>
       </div>
     </div>
+
+    <!-- Jury Modal -->
+    <div v-if="showJuryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="closeJuryModal">
+      <div class="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+          <h2 class="text-xl font-semibold text-gray-900">
+            {{ editingJury ? 'Редактировать члена жюри' : 'Добавить члена жюри' }}
+          </h2>
+          <button @click="closeJuryModal" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="handleSaveJury" class="p-6 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">ФИО *</label>
+            <input
+              v-model="juryForm.fullName"
+              type="text"
+              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Должность *</label>
+            <input
+              v-model="juryForm.position"
+              type="text"
+              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Организация</label>
+            <input
+              v-model="juryForm.organization"
+              type="text"
+              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Биография</label>
+            <textarea
+              v-model="juryForm.bio"
+              rows="3"
+              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            ></textarea>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Фото</label>
+            <input
+              type="file"
+              @change="handleJuryPhotoSelect"
+              accept="image/jpeg,image/png,image/webp"
+              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+            <p class="text-xs text-gray-500 mt-1">JPEG, PNG или WebP. Макс. 5 МБ</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input
+              v-model="juryForm.isActive"
+              type="checkbox"
+              id="juryIsActive"
+              class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+            />
+            <label for="juryIsActive" class="text-sm text-gray-700">Активен (виден на сайте)</label>
+          </div>
+
+          <div v-if="juryError" class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
+            {{ juryError }}
+          </div>
+
+          <div class="flex gap-3 pt-4">
+            <button
+              type="submit"
+              :disabled="juryLoading"
+              class="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {{ juryLoading ? 'Сохранение...' : 'Сохранить' }}
+            </button>
+            <button
+              type="button"
+              @click="closeJuryModal"
+              class="btn-secondary"
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Finalist Modal -->
+    <div v-if="showFinalistModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="closeFinalistModal">
+      <div class="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+          <h2 class="text-xl font-semibold text-gray-900">
+            {{ editingFinalist ? 'Редактировать финалиста' : 'Добавить финалиста' }}
+          </h2>
+          <button @click="closeFinalistModal" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="handleSaveFinalist" class="p-6 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">ФИО *</label>
+            <input
+              v-model="finalistForm.fullName"
+              type="text"
+              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Название проекта *</label>
+            <input
+              v-model="finalistForm.projectName"
+              type="text"
+              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Категория *</label>
+            <select
+              v-model="finalistForm.category"
+              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="starter">Стартап</option>
+              <option value="active">Активный бизнес</option>
+              <option value="it">IT проект</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Город</label>
+            <input
+              v-model="finalistForm.city"
+              type="text"
+              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Описание проекта</label>
+            <textarea
+              v-model="finalistForm.description"
+              rows="3"
+              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            ></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Место</label>
+              <input
+                v-model.number="finalistForm.place"
+                type="number"
+                min="1"
+                max="10"
+                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="1, 2, 3..."
+              />
+            </div>
+            <div class="flex items-end">
+              <div class="flex items-center gap-2">
+                <input
+                  v-model="finalistForm.isWinner"
+                  type="checkbox"
+                  id="finalistIsWinner"
+                  class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                />
+                <label for="finalistIsWinner" class="text-sm text-gray-700">Победитель</label>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Фото</label>
+            <input
+              type="file"
+              @change="handleFinalistPhotoSelect"
+              accept="image/jpeg,image/png,image/webp"
+              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+            <p class="text-xs text-gray-500 mt-1">JPEG, PNG или WebP. Макс. 5 МБ</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input
+              v-model="finalistForm.isActive"
+              type="checkbox"
+              id="finalistIsActive"
+              class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+            />
+            <label for="finalistIsActive" class="text-sm text-gray-700">Активен (виден на сайте)</label>
+          </div>
+
+          <div v-if="finalistsError" class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
+            {{ finalistsError }}
+          </div>
+
+          <div class="flex gap-3 pt-4">
+            <button
+              type="submit"
+              :disabled="finalistsLoading"
+              class="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {{ finalistsLoading ? 'Сохранение...' : 'Сохранить' }}
+            </button>
+            <button
+              type="button"
+              @click="closeFinalistModal"
+              class="btn-secondary"
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -987,11 +1506,13 @@ const { user, logout } = useAuth()
 const { applications, users, contacts, stats, loading, error, getAllApplications, updateApplicationStatus, getAllUsers, getStats, getAllContacts, getContactById, exportApplications, exportUsers } = useAdmin()
 const { activeTemplate, uploadTemplate, getActiveTemplate, downloadTemplate, deleteTemplate } = useTemplate()
 const { settings: periodSettings, periodStatus, loading: settingsLoading, error: settingsError, getApplicationSettings, updateApplicationSettings, formatDateForInput, formatDate: formatSettingsDate } = useSettings()
+const { juryMembers, loading: juryLoading, error: juryError, getAllJuryMembers, createJuryMember, updateJuryMember, deleteJuryMember, uploadJuryPhoto, getPhotoUrl: getJuryPhotoUrl } = useJury()
+const { finalists, loading: finalistsLoading, error: finalistsError, getAllFinalists, createFinalist, updateFinalist, deleteFinalist, uploadFinalistPhoto, getPhotoUrl: getFinalistPhotoUrl, getCategoryLabel } = useFinalist()
 
 const config = useRuntimeConfig()
 const apiUrl = config.public.apiUrl
 
-const activeTab = ref<'applications' | 'users' | 'templates' | 'contacts' | 'stats' | 'settings'>('applications')
+const activeTab = ref<'applications' | 'users' | 'templates' | 'contacts' | 'stats' | 'settings' | 'jury' | 'finalists'>('applications')
 const filters = ref({
   status: 'submitted' as '' | 'draft' | 'submitted',
   category: '' as '' | 'starter' | 'active' | 'it',
@@ -1029,6 +1550,34 @@ const periodForm = ref({
   end_date: ''
 })
 const settingsSuccess = ref(false)
+
+// Jury state
+const showJuryModal = ref(false)
+const editingJury = ref<any>(null)
+const juryForm = ref({
+  fullName: '',
+  position: '',
+  organization: '',
+  bio: '',
+  isActive: true
+})
+const juryPhotoFile = ref<File | null>(null)
+
+// Finalists state
+const showFinalistModal = ref(false)
+const editingFinalist = ref<any>(null)
+const finalistForm = ref({
+  fullName: '',
+  projectName: '',
+  category: 'starter' as 'starter' | 'active' | 'it',
+  city: '',
+  description: '',
+  place: null as number | null,
+  isWinner: false,
+  isActive: true
+})
+const finalistPhotoFile = ref<File | null>(null)
+const finalistCategoryFilter = ref<'' | 'starter' | 'active' | 'it'>('')
 
 // Export state
 const exportLoading = ref(false)
@@ -1229,6 +1778,10 @@ watch(activeTab, async (newTab) => {
     await loadSettings()
   } else if (newTab === 'stats' && !stats.value) {
     await getStats()
+  } else if (newTab === 'jury' && juryMembers.value.length === 0) {
+    await loadJury()
+  } else if (newTab === 'finalists' && finalists.value.length === 0) {
+    await loadFinalists()
   }
 })
 
@@ -1441,6 +1994,188 @@ const resetPeriodForm = () => {
     periodForm.value.end_date = formatDateForInput(periodSettings.value.end_date)
   }
   settingsSuccess.value = false
+}
+
+// Jury handlers
+const loadJury = async () => {
+  try {
+    await getAllJuryMembers()
+  } catch (err) {
+    console.error('Failed to load jury:', err)
+  }
+}
+
+const openJuryModal = (member?: any) => {
+  if (member) {
+    editingJury.value = member
+    juryForm.value = {
+      fullName: member.fullName,
+      position: member.position,
+      organization: member.organization || '',
+      bio: member.bio || '',
+      isActive: member.isActive
+    }
+  } else {
+    editingJury.value = null
+    juryForm.value = {
+      fullName: '',
+      position: '',
+      organization: '',
+      bio: '',
+      isActive: true
+    }
+  }
+  juryPhotoFile.value = null
+  showJuryModal.value = true
+}
+
+const closeJuryModal = () => {
+  showJuryModal.value = false
+  editingJury.value = null
+  juryPhotoFile.value = null
+}
+
+const handleJuryPhotoSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    juryPhotoFile.value = target.files[0]
+  }
+}
+
+const handleSaveJury = async () => {
+  try {
+    let member
+    if (editingJury.value) {
+      member = await updateJuryMember(editingJury.value.id, juryForm.value)
+    } else {
+      member = await createJuryMember(juryForm.value)
+    }
+
+    // Загрузить фото если выбрано
+    if (juryPhotoFile.value && member) {
+      await uploadJuryPhoto(member.id, juryPhotoFile.value)
+    }
+
+    await loadJury()
+    closeJuryModal()
+  } catch (err) {
+    console.error('Failed to save jury member:', err)
+  }
+}
+
+const handleDeleteJury = async (id: string) => {
+  if (!confirm('Вы уверены, что хотите удалить этого члена жюри?')) return
+
+  try {
+    await deleteJuryMember(id)
+  } catch (err) {
+    console.error('Failed to delete jury member:', err)
+  }
+}
+
+const handleToggleJuryActive = async (member: any) => {
+  try {
+    await updateJuryMember(member.id, { isActive: !member.isActive })
+    await loadJury()
+  } catch (err) {
+    console.error('Failed to toggle jury active:', err)
+  }
+}
+
+// Finalists handlers
+const loadFinalists = async () => {
+  try {
+    const filters: any = {}
+    if (finalistCategoryFilter.value) {
+      filters.category = finalistCategoryFilter.value
+    }
+    await getAllFinalists(filters)
+  } catch (err) {
+    console.error('Failed to load finalists:', err)
+  }
+}
+
+const openFinalistModal = (finalist?: any) => {
+  if (finalist) {
+    editingFinalist.value = finalist
+    finalistForm.value = {
+      fullName: finalist.fullName,
+      projectName: finalist.projectName,
+      category: finalist.category,
+      city: finalist.city || '',
+      description: finalist.description || '',
+      place: finalist.place,
+      isWinner: finalist.isWinner,
+      isActive: finalist.isActive
+    }
+  } else {
+    editingFinalist.value = null
+    finalistForm.value = {
+      fullName: '',
+      projectName: '',
+      category: 'starter',
+      city: '',
+      description: '',
+      place: null,
+      isWinner: false,
+      isActive: true
+    }
+  }
+  finalistPhotoFile.value = null
+  showFinalistModal.value = true
+}
+
+const closeFinalistModal = () => {
+  showFinalistModal.value = false
+  editingFinalist.value = null
+  finalistPhotoFile.value = null
+}
+
+const handleFinalistPhotoSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    finalistPhotoFile.value = target.files[0]
+  }
+}
+
+const handleSaveFinalist = async () => {
+  try {
+    let finalist
+    if (editingFinalist.value) {
+      finalist = await updateFinalist(editingFinalist.value.id, finalistForm.value)
+    } else {
+      finalist = await createFinalist(finalistForm.value)
+    }
+
+    // Загрузить фото если выбрано
+    if (finalistPhotoFile.value && finalist) {
+      await uploadFinalistPhoto(finalist.id, finalistPhotoFile.value)
+    }
+
+    await loadFinalists()
+    closeFinalistModal()
+  } catch (err) {
+    console.error('Failed to save finalist:', err)
+  }
+}
+
+const handleDeleteFinalist = async (id: string) => {
+  if (!confirm('Вы уверены, что хотите удалить этого финалиста?')) return
+
+  try {
+    await deleteFinalist(id)
+  } catch (err) {
+    console.error('Failed to delete finalist:', err)
+  }
+}
+
+const handleToggleFinalistActive = async (finalist: any) => {
+  try {
+    await updateFinalist(finalist.id, { isActive: !finalist.isActive })
+    await loadFinalists()
+  } catch (err) {
+    console.error('Failed to toggle finalist active:', err)
+  }
 }
 
 // Export handlers

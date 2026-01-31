@@ -485,6 +485,156 @@
       </div>
     </section>
 
+    <!-- Jury Section -->
+    <section v-if="juryMembers.length > 0" class="section-padding bg-gray-50">
+      <div class="container-custom">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{{ $t('home.jury.title') }}</h2>
+          <p class="text-lg text-gray-600 max-w-2xl mx-auto">{{ $t('home.jury.description') }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div
+            v-for="member in juryMembers"
+            :key="member.id"
+            class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow duration-300"
+          >
+            <div class="aspect-square bg-gray-200 relative overflow-hidden">
+              <img
+                v-if="member.photoPath"
+                :src="getJuryPhotoUrl(member.photoPath)"
+                :alt="member.fullName"
+                class="w-full h-full object-cover"
+              />
+              <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+                <svg class="w-20 h-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="p-4 text-center">
+              <h3 class="font-semibold text-gray-900 text-lg">{{ member.fullName }}</h3>
+              <p class="text-primary-600 font-medium text-sm">{{ member.position }}</p>
+              <p v-if="member.organization" class="text-gray-500 text-sm mt-1">{{ member.organization }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Finalists Section -->
+    <section v-if="finalists.length > 0" class="section-padding bg-white">
+      <div class="container-custom">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{{ $t('home.finalists.title') }}</h2>
+          <p class="text-lg text-gray-600 max-w-2xl mx-auto">{{ $t('home.finalists.description') }}</p>
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="flex flex-wrap justify-center gap-2 mb-8">
+          <button
+            @click="finalistFilter = ''"
+            :class="[
+              'px-4 py-2 rounded-full font-medium transition-colors',
+              finalistFilter === '' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ]"
+          >
+            {{ $t('home.finalists.all') }}
+          </button>
+          <button
+            @click="finalistFilter = 'starter'"
+            :class="[
+              'px-4 py-2 rounded-full font-medium transition-colors',
+              finalistFilter === 'starter' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ]"
+          >
+            {{ $t('home.finalists.starter') }}
+          </button>
+          <button
+            @click="finalistFilter = 'active'"
+            :class="[
+              'px-4 py-2 rounded-full font-medium transition-colors',
+              finalistFilter === 'active' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ]"
+          >
+            {{ $t('home.finalists.active') }}
+          </button>
+          <button
+            @click="finalistFilter = 'it'"
+            :class="[
+              'px-4 py-2 rounded-full font-medium transition-colors',
+              finalistFilter === 'it' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ]"
+          >
+            {{ $t('home.finalists.it') }}
+          </button>
+        </div>
+
+        <!-- Finalists Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            v-for="finalist in filteredFinalists"
+            :key="finalist.id"
+            class="bg-gray-50 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300"
+            :class="{ 'ring-2 ring-yellow-400': finalist.isWinner }"
+          >
+            <div class="flex gap-4 p-4">
+              <div class="w-20 h-20 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
+                <img
+                  v-if="finalist.photoPath"
+                  :src="getFinalistPhotoUrl(finalist.photoPath)"
+                  :alt="finalist.fullName"
+                  class="w-full h-full object-cover"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+                  <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-2">
+                  <h3 class="font-semibold text-gray-900 truncate">{{ finalist.fullName }}</h3>
+                  <div v-if="finalist.place" class="flex items-center gap-1">
+                    <span
+                      class="font-bold text-lg"
+                      :class="{
+                        'text-yellow-500': finalist.place === 1,
+                        'text-gray-400': finalist.place === 2,
+                        'text-orange-600': finalist.place === 3
+                      }"
+                    >
+                      {{ finalist.place }}
+                    </span>
+                    <svg v-if="finalist.isWinner" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                    </svg>
+                  </div>
+                </div>
+                <p class="text-primary-600 font-medium text-sm truncate">{{ finalist.projectName }}</p>
+                <div class="flex items-center gap-2 mt-2">
+                  <span
+                    class="px-2 py-0.5 text-xs font-medium rounded-full"
+                    :class="{
+                      'bg-blue-100 text-blue-800': finalist.category === 'starter',
+                      'bg-green-100 text-green-800': finalist.category === 'active',
+                      'bg-purple-100 text-purple-800': finalist.category === 'it'
+                    }"
+                  >
+                    {{ getCategoryLabel(finalist.category) }}
+                  </span>
+                  <span v-if="finalist.city" class="text-gray-500 text-xs">{{ finalist.city }}</span>
+                </div>
+              </div>
+            </div>
+            <div v-if="finalist.description" class="px-4 pb-4">
+              <p class="text-gray-600 text-sm line-clamp-2">{{ finalist.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- CTA Section -->
     <section class="section-padding bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white relative overflow-hidden">
       <!-- Decorative elements -->
@@ -561,9 +711,22 @@
 <script setup lang="ts">
 const { settings, periodStatus, loading, getApplicationSettings, formatDate } = useSettings()
 const { getOrganizationSchema, getEventSchema, getWebSiteSchema } = useStructuredData()
+const { juryMembers, getActiveJuryMembers, getPhotoUrl: getJuryPhotoUrl } = useJury()
+const { finalists, getActiveFinalists, getPhotoUrl: getFinalistPhotoUrl, getCategoryLabel } = useFinalist()
 
 // FAQ accordion state
 const openFaq = ref<number | null>(null)
+
+// Finalist filter
+const finalistFilter = ref<'' | 'starter' | 'active' | 'it'>('')
+
+// Filtered finalists
+const filteredFinalists = computed(() => {
+  if (!finalistFilter.value) {
+    return finalists.value
+  }
+  return finalists.value.filter(f => f.category === finalistFilter.value)
+})
 
 const toggleFaq = (id: number) => {
   openFaq.value = openFaq.value === id ? null : id
@@ -574,9 +737,13 @@ const organizationSchema = getOrganizationSchema()
 const eventSchema = getEventSchema()
 const webSiteSchema = getWebSiteSchema()
 
-// Загрузить настройки периода при монтировании
+// Загрузить данные при монтировании
 onMounted(async () => {
-  await getApplicationSettings()
+  await Promise.all([
+    getApplicationSettings(),
+    getActiveJuryMembers().catch(() => {}),
+    getActiveFinalists().catch(() => {})
+  ])
 })
 
 // SEO: canonical and hreflang

@@ -149,3 +149,38 @@ enum UserRole {
   user
   admin
 }
+
+// Jury Member - член жюри конкурса
+model JuryMember {
+  id           String   @id @default(uuid()) @db.Uuid
+  fullName     String   @map("full_name")
+  position     String   // Должность
+  organization String?  // Организация
+  photoPath    String?  @map("photo_path")
+  bio          String?  @db.Text // Краткая биография
+  order        Int      @default(0) // Порядок отображения
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("jury_members")
+}
+
+// Finalist - финалист конкурса
+model Finalist {
+  id          String              @id @default(uuid()) @db.Uuid
+  fullName    String              @map("full_name")
+  projectName String              @map("project_name")
+  category    ApplicationCategory
+  city        String?
+  photoPath   String?             @map("photo_path")
+  description String?             @db.Text // Описание проекта
+  place       Int?                // Место (1, 2, 3 или null)
+  isWinner    Boolean             @default(false) @map("is_winner")
+  order       Int                 @default(0) // Порядок отображения
+  isActive    Boolean             @default(true) @map("is_active")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+
+  @@map("finalists")
+}
