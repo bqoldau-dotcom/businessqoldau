@@ -99,8 +99,8 @@ export default defineNuxtConfig({
   // Runtime config
   runtimeConfig: {
     public: {
-      baseUrl: process.env.BASE_URL || 'http://localhost:3000',
-      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'https://businessqoldau-997846271826.europe-west1.run.app'
+      baseUrl: process.env.BASE_URL || 'https://businessqoldau.kz',
+      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'https://businessqoldau.kz'
     }
   }
 })

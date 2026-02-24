@@ -78,5 +78,5 @@
 ## 9. Контакты
 
 По всем вопросам обращайтесь:
-- Email: info@businesscamp.kz
+- Email: info@businessqoldau.kz
 - Телефон: +7 (777) 260-00-38

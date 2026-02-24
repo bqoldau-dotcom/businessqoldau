@@ -350,7 +350,7 @@
                           </span>
                         </div>
                         <p class="text-sm text-gray-500">
-                          {{ t('cabinet.application.createdOn') }}: {{ new Date(application.createdAt).toLocaleDateString('ru-RU') }}
+                          {{ t('cabinet.application.createdOn') }}: {{ formatDateTimeWithTimezone(application.createdAt) }}
                         </p>
                       </div>
                       <div class="flex gap-2">
@@ -392,11 +392,11 @@
     </div>
 
     <!-- Application View Modal -->
-    <div v-if="viewingApplication" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="viewingApplication = false">
+    <div v-if="viewingApplication" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="closeApplicationModal">
       <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
           <h2 class="text-2xl font-semibold text-gray-900">Заявка на участие</h2>
-          <button @click="viewingApplication = false" class="text-gray-400 hover:text-gray-600">
+          <button @click="closeApplicationModal" class="text-gray-400 hover:text-gray-600">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
@@ -426,7 +426,7 @@
                 }}
               </span>
               <p class="text-sm text-gray-500 mt-2">
-                {{ t('cabinet.application.createdOn') }}: {{ new Date(application.createdAt).toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' }) }}
+                {{ t('cabinet.application.createdOn') }}: {{ formatDateTimeWithTimezone(application.createdAt) }}
               </p>
             </div>
 
@@ -485,8 +485,29 @@
               </div>
             </div>
 
+            <!-- Privacy Consent Checkbox -->
+            <div v-if="application.status === 'draft' || application.status === 'revision' || application.status === 'withdrawn'" class="mt-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  v-model="privacyConsent"
+                  class="mt-1 w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
+                />
+                <span class="text-sm text-gray-700">
+                  {{ t('cabinet.application.privacyConsent') }}
+                  <a
+                    href="https://businessqoldau.kz/privacy"
+                    target="_blank"
+                    class="text-primary-600 hover:text-primary-700 underline font-medium"
+                  >
+                    {{ t('cabinet.application.privacyPolicy') }}
+                  </a>
+                </span>
+              </label>
+            </div>
+
             <!-- Actions -->
-            <div v-if="application.status === 'draft' || application.status === 'revision' || application.status === 'withdrawn'" class="mt-8 flex gap-4">
+            <div v-if="application.status === 'draft' || application.status === 'revision' || application.status === 'withdrawn'" class="mt-4 flex gap-4">
               <button
                 @click="editApplication"
                 class="btn-secondary flex-1"
@@ -495,9 +516,9 @@
               </button>
               <button
                 @click="handleSubmitApplication"
-                :disabled="!canSubmitApplication"
+                :disabled="!canSubmitApplication || !privacyConsent"
                 class="btn-primary flex-1"
-                :class="{ 'opacity-50 cursor-not-allowed': !canSubmitApplication }"
+                :class="{ 'opacity-50 cursor-not-allowed': !canSubmitApplication || !privacyConsent }"
               >
                 {{ application.status === 'revision' || application.status === 'withdrawn' ? 'Отправить повторно' : 'Отправить заявку' }}
               </button>
@@ -749,6 +770,7 @@ definePageMeta({
 
 const { user, logout, fetchCurrentUser, deleteAccount } = useAuth()
 const { profile, loading: profileLoading, error: profileError, fetchProfile, updateProfile, createProfile } = useProfile()
+const { formatDateTime, formatDateLong, formatDateTimeWithTimezone } = useDateFormat()
 const {
   application,
   applicationFiles,
@@ -800,6 +822,9 @@ const showDeleteConfirmation = ref(false)
 
 // Withdraw application state
 const showWithdrawConfirmation = ref(false)
+
+// Privacy consent state
+const privacyConsent = ref(false)
 
 // Multiple files handling
 const selectedFiles = ref<File[]>([])
@@ -1088,13 +1113,14 @@ const handleSubmitApplication = async () => {
     return
   }
 
-  const confirmed = confirm(t('cabinet.application.submitConfirm'))
-  if (!confirmed) return
+  if (!privacyConsent.value) {
+    return
+  }
 
   try {
     await submitApplication(application.value.id)
     alert(t('cabinet.application.submitSuccess'))
-    viewingApplication.value = false
+    closeApplicationModal()
   } catch (error) {
     console.error('Failed to submit application:', error)
     alert(t('cabinet.application.submitError'))
@@ -1109,7 +1135,7 @@ const confirmDelete = async () => {
 
   try {
     await deleteApplication(application.value.id)
-    viewingApplication.value = false
+    closeApplicationModal()
     showApplicationForm.value = false
     applicationForm.value = {
       category: '',
@@ -1189,6 +1215,11 @@ const handleDownloadTemplate = () => {
   if (templateInfo.value) {
     downloadTemplate(templateInfo.value)
   }
+}
+
+const closeApplicationModal = () => {
+  viewingApplication.value = false
+  privacyConsent.value = false
 }
 
 const editApplication = () => {

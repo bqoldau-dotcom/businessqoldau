@@ -1868,15 +1868,6 @@ const viewApplication = (app: any) => {
   selectedApplication.value = app
 }
 
-const getCategoryLabel = (category: string) => {
-  const labels: Record<string, string> = {
-    starter: 'Стартап',
-    active: 'Активный бизнес',
-    it: 'IT проект'
-  }
-  return labels[category] || category
-}
-
 const loadContacts = async (page: number = 1) => {
   try {
     const response = await getAllContacts({

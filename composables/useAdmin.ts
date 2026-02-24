@@ -85,6 +85,7 @@ interface ApplicationStats {
 interface GetApplicationsParams {
   status?: 'draft' | 'submitted'
   category?: 'starter' | 'active' | 'it'
+  phone?: string
   page?: number
   limit?: number
 }
@@ -144,6 +145,7 @@ export const useAdmin = () => {
       const queryParams = new URLSearchParams()
       if (params?.status) queryParams.append('status', params.status)
       if (params?.category) queryParams.append('category', params.category)
+      if (params?.phone) queryParams.append('phone', params.phone)
       if (params?.page) queryParams.append('page', params.page.toString())
       if (params?.limit) queryParams.append('limit', params.limit.toString())
 
@@ -309,15 +311,25 @@ export const useAdmin = () => {
   }
 
   /**
-   * Export all applications to Excel
+   * Export applications to Excel with optional filters
    */
-  const exportApplications = async () => {
+  const exportApplications = async (params?: { status?: string; category?: string; phone?: string }) => {
     loading.value = true
     error.value = null
 
     try {
       const { accessToken } = useAuth()
-      const response = await fetch(`${config.public.apiUrl}/admin/applications/export`, {
+
+      // Build query string from filters
+      const queryParams = new URLSearchParams()
+      if (params?.status) queryParams.append('status', params.status)
+      if (params?.category) queryParams.append('category', params.category)
+      if (params?.phone) queryParams.append('phone', params.phone)
+
+      const queryString = queryParams.toString()
+      const apiUrl = `${config.public.apiUrl}/admin/applications/export${queryString ? `?${queryString}` : ''}`
+
+      const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${accessToken.value}`,

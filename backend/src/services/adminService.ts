@@ -7,10 +7,11 @@ import { ApplicationStatus } from '@prisma/client';
 export const getAllApplications = async (params: {
   status?: ApplicationStatus;
   category?: string;
+  phone?: string;
   page?: number;
   limit?: number;
 }) => {
-  const { status, category, page = 1, limit = 50 } = params;
+  const { status, category, phone, page = 1, limit = 50 } = params;
   const skip = (page - 1) * limit;
 
   // Build filter object
@@ -20,6 +21,17 @@ export const getAllApplications = async (params: {
   }
   if (category) {
     where.category = category;
+  }
+  // Search by phone number in user profile
+  if (phone && phone.trim()) {
+    where.user = {
+      profile: {
+        phone: {
+          contains: phone.trim(),
+          mode: 'insensitive',
+        },
+      },
+    };
   }
 
   // Get applications with user info and files

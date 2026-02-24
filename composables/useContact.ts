@@ -1,6 +1,6 @@
 export const useContact = () => {
   const config = useRuntimeConfig()
-  const apiUrl = config.public.apiUrl || 'https://businessqoldau-997846271826.europe-west1.run.app/api'
+  const apiUrl = config.public.apiUrl || 'https://businessqoldau.kz/api'
 
   interface ContactData {
     name: string

@@ -1,13 +1,42 @@
 import ExcelJS from 'exceljs';
 import prisma from '../config/database';
 
+interface ExportFilters {
+  status?: string;
+  category?: string;
+  phone?: string;
+}
+
 /**
- * Export all applications to Excel file
+ * Export applications to Excel file with optional filters
  * Returns Excel workbook buffer
  */
-export const exportApplicationsToExcel = async () => {
-  // Fetch ALL applications with user and profile data
+export const exportApplicationsToExcel = async (filters?: ExportFilters) => {
+  // Build where clause based on filters
+  const where: any = {};
+
+  if (filters?.status) {
+    where.status = filters.status;
+  }
+
+  if (filters?.category) {
+    where.category = filters.category;
+  }
+
+  if (filters?.phone) {
+    where.user = {
+      profile: {
+        phone: {
+          contains: filters.phone,
+          mode: 'insensitive',
+        },
+      },
+    };
+  }
+
+  // Fetch applications with filters
   const applications = await prisma.application.findMany({
+    where,
     include: {
       user: {
         select: {

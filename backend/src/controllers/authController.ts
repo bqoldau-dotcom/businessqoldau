@@ -139,7 +139,7 @@ export const resendVerificationCode = async (req: Request, res: Response, next: 
     await authService.resendVerificationCode(validatedData.email);
 
     res.json({
-      message: 'Verification code sent to your email',
+      message: 'Код подтверждения отправлен на ваш email',
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

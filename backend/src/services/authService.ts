@@ -1,4 +1,4 @@
-// import bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
 import fs from 'fs/promises';
 import path from 'path';
 import prisma from '../config/database';
@@ -44,13 +44,13 @@ export const register = async (input: RegisterInput): Promise<{ userId: string }
   }
 
   // Hash password
-  // const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+  const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
   // Create user and profile in a transaction
   const user = await prisma.user.create({
     data: {
       email,
-      passwordHash,
+      passwordHash: passwordHash,
       emailVerified: false, // Require email verification
       profile: {
         create: {
@@ -101,7 +101,7 @@ export const login = async (input: LoginInput): Promise<AuthResponse> => {
   }
 
   // Verify password
-  // const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+  const isValidPassword = await bcrypt.compare(password, user.passwordHash);
 
   if (!isValidPassword) {
     throw new AppError('Неверный email или пароль', 401);
@@ -213,11 +213,11 @@ export const resendVerificationCode = async (email: string): Promise<void> => {
   });
 
   if (!user) {
-    throw new AppError('User not found', 404);
+    throw new AppError('Пользователь не найден', 404);
   }
 
   if (user.emailVerified) {
-    throw new AppError('Email already verified', 400);
+    throw new AppError('Email уже подтверждён. Вы можете войти в систему.', 400);
   }
 
   // Delete old verification tokens
@@ -242,7 +242,12 @@ export const resendVerificationCode = async (email: string): Promise<void> => {
   });
 
   // Send verification email
-  await sendVerificationEmail(email, verificationCode);
+  try {
+    await sendVerificationEmail(email, verificationCode);
+  } catch (error) {
+    console.error('Failed to send verification email:', error);
+    // Don't fail if email fails, user can request new code
+  }
 };
 
 export const requestPasswordReset = async (email: string): Promise<void> => {
@@ -280,7 +285,7 @@ export const requestPasswordReset = async (email: string): Promise<void> => {
     await sendPasswordResetEmail(email, resetCode);
   } catch (error) {
     console.error('Failed to send password reset email:', error);
-    throw new AppError('Failed to send password reset email', 500);
+    // Don't fail if email fails, user can request new code
   }
 };
 
@@ -338,12 +343,12 @@ export const resetPassword = async (email: string, code: string, newPassword: st
   }
 
   // Hash new password
-  // const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
 
   // Update user password
   await prisma.user.update({
     where: { id: user.id },
-    data: { passwordHash },
+    data: { passwordHash: passwordHash },
   });
 
   // Delete all reset tokens for this user

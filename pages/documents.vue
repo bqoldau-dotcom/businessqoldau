@@ -9,46 +9,6 @@
 
       <!-- Documents Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-        <!-- Document 1: Правила предоставления гранта -->
-        <div class="bg-white rounded-2xl shadow-soft overflow-hidden hover:shadow-lg transition-all duration-300 border border-gray-100">
-          <div class="p-8">
-            <!-- Icon and Date -->
-            <div class="flex items-start justify-between mb-6">
-              <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center flex-shrink-0">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div class="text-sm text-gray-500 text-right">
-                <div>{{ $t('documents.uploadDate') }}</div>
-                <div class="font-semibold text-gray-700">{{ $t('documents.doc1.date') }}</div>
-              </div>
-            </div>
-
-            <!-- Title and Description -->
-            <h3 class="text-xl font-bold text-gray-900 mb-3">
-              {{ $t('documents.doc1.title') }}
-            </h3>
-            <p class="text-gray-600 mb-6 leading-relaxed">
-              {{ $t('documents.doc1.description') }}
-            </p>
-
-            <!-- Actions -->
-            <div class="flex items-center space-x-3">
-              <a
-                href="/uploads/documents/pravila-predostavleniya-granta.docx"
-                download
-                class="flex-1 flex items-center justify-center space-x-2 px-5 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>{{ $t('documents.download') }}</span>
-              </a>
-            </div>
-          </div>
-        </div>
-
         <!-- Document 2: Шаблон бизнес-плана -->
         <div class="bg-white rounded-2xl shadow-soft overflow-hidden hover:shadow-lg transition-all duration-300 border border-gray-100">
           <div class="p-8">
@@ -117,6 +77,46 @@
             <div class="flex items-center space-x-3">
               <a
                 href="/uploads/documents/prioritetnye-sektora.pdf"
+                download
+                class="flex-1 flex items-center justify-center space-x-2 px-5 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>{{ $t('documents.download') }}</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Document 4: Правила предоставления инновационного гранта -->
+        <div class="bg-white rounded-2xl shadow-soft overflow-hidden hover:shadow-lg transition-all duration-300 border border-gray-100">
+          <div class="p-8">
+            <!-- Icon and Date -->
+            <div class="flex items-start justify-between mb-6">
+              <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div class="text-sm text-gray-500 text-right">
+                <div>{{ $t('documents.uploadDate') }}</div>
+                <div class="font-semibold text-gray-700">{{ $t('documents.doc4.date') }}</div>
+              </div>
+            </div>
+
+            <!-- Title and Description -->
+            <h3 class="text-xl font-bold text-gray-900 mb-3">
+              {{ $t('documents.doc4.title') }}
+            </h3>
+            <p class="text-gray-600 mb-6 leading-relaxed">
+              {{ $t('documents.doc4.description') }}
+            </p>
+
+            <!-- Actions -->
+            <div class="flex items-center space-x-3">
+              <a
+                href="/uploads/documents/pravila-innovacionnogo-granta.docx"
                 download
                 class="flex-1 flex items-center justify-center space-x-2 px-5 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
               >

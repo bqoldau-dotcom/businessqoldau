@@ -30,7 +30,7 @@ export const authLimiter = rateLimit({
  */
 export const passwordResetLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 минут
-  max: 3, // максимум 3 запроса
+  max: 10, // максимум 10 запросов (для тестирования, потом вернуть на 3)
   message: {
     status: 'error',
     message: 'Слишком много запросов на восстановление пароля. Попробуйте через 15 минут.'

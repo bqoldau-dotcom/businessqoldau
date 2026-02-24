@@ -69,8 +69,8 @@
               <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
-              <a href="mailto:info@businesscamp.kz" class="hover:text-white transition-colors">
-                info@businesscamp.kz
+              <a href="mailto:info@businessqoldau.kz" class="hover:text-white transition-colors">
+                info@businessqoldau.kz
               </a>
             </li>
             <li class="flex items-start space-x-3 text-gray-400">
@@ -106,13 +106,17 @@
           <p class="text-gray-400 text-sm text-center md:text-left">
             {{ $t('footer.copyright') }}
           </p>
-          <div class="flex items-center space-x-6 text-sm text-gray-400">
-            <NuxtLink to="/terms" class="hover:text-white transition-colors">
-              Условия использования
+          <div class="flex flex-wrap items-center justify-center md:justify-end gap-x-4 gap-y-2 text-sm text-gray-400">
+            <NuxtLink to="/consent" class="hover:text-white transition-colors">
+              {{ $t('footer.consent') }}
             </NuxtLink>
-            <span class="text-gray-700">|</span>
+            <span class="text-gray-700 hidden md:inline">|</span>
+            <NuxtLink to="/offer" class="hover:text-white transition-colors">
+              {{ $t('footer.offer') }}
+            </NuxtLink>
+            <span class="text-gray-700 hidden md:inline">|</span>
             <NuxtLink to="/privacy" class="hover:text-white transition-colors">
-              Политика конфиденциальности
+              {{ $t('nav.privacy') }}
             </NuxtLink>
           </div>
         </div>

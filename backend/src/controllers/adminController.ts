@@ -18,6 +18,7 @@ import {
 const getApplicationsSchema = z.object({
   status: z.enum(['draft', 'submitted', 'accepted', 'rejected', 'withdrawn', 'revision']).optional(),
   category: z.enum(['starter', 'active', 'it']).optional(),
+  phone: z.string().optional(),
   page: z.string().regex(/^\d+$/).transform(Number).optional(),
   limit: z.string().regex(/^\d+$/).transform(Number).optional(),
 });
@@ -252,16 +253,27 @@ export const getContactHandler = async (req: Request, res: Response) => {
 
 /**
  * GET /api/admin/applications/export
- * Export all applications to Excel file
+ * Export applications to Excel file with optional filters
  */
 export const exportApplicationsHandler = async (req: Request, res: Response) => {
   try {
-    // Generate Excel file buffer
-    const buffer = await exportApplicationsToExcel();
+    // Extract filters from query params
+    const { status, category, phone } = req.query;
 
-    // Generate filename with current date
+    const filters: { status?: string; category?: string; phone?: string } = {};
+    if (status && typeof status === 'string') filters.status = status;
+    if (category && typeof category === 'string') filters.category = category;
+    if (phone && typeof phone === 'string') filters.phone = phone;
+
+    // Generate Excel file buffer with filters
+    const buffer = await exportApplicationsToExcel(Object.keys(filters).length > 0 ? filters : undefined);
+
+    // Generate filename with current date and filter info
     const date = new Date().toISOString().split('T')[0];
-    const filename = `applications_${date}.xlsx`;
+    let filename = `applications_${date}`;
+    if (filters.status) filename += `_${filters.status}`;
+    if (filters.category) filename += `_${filters.category}`;
+    filename += '.xlsx';
 
     // Set headers for file download
     res.setHeader(

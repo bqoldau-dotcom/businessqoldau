@@ -39,7 +39,7 @@ const getEmailSignature = (): string => {
             <tr>
               <td style="padding: 8px 0;">
                 <strong>✉ Email:</strong>
-                <a href="mailto:qoldaubusiness@gmail.com" style="color: #2563eb; text-decoration: none; margin-left: 5px;">qoldaubusiness@gmail.com</a>
+                <a href="mailto:info@businessqoldau.kz" style="color: #2563eb; text-decoration: none; margin-left: 5px;">info@businessqoldau.kz</a>
               </td>
             </tr>
             <tr>
@@ -60,7 +60,7 @@ const getEmailSignature = (): string => {
             <p style="margin: 0; font-size: 12px; color: #6b7280; line-height: 1.6;">
               Это автоматическое письмо. Пожалуйста, не отвечайте на него.<br>
               Если у вас есть вопросы, свяжитесь со службой поддержки:
-              <a href="mailto:qoldaubusiness@gmail.com" style="color: #2563eb; text-decoration: none;">qoldaubusiness@gmail.com</a>
+              <a href="mailto:info@businessqoldau.kz" style="color: #2563eb; text-decoration: none;">info@businessqoldau.kz</a>
             </p>
           </div>
 
@@ -479,7 +479,7 @@ export const sendContactReplyEmail = async (
         <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 15px; border-radius: 6px; margin-bottom: 25px;">
           <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 1.5;">
             ℹ <strong>Остались вопросы?</strong> Вы можете связаться с нами по email
-            <a href="mailto:qoldaubusiness@gmail.com" style="color: #2563eb; text-decoration: none;">qoldaubusiness@gmail.com</a>
+            <a href="mailto:info@businessqoldau.kz" style="color: #2563eb; text-decoration: none;">info@businessqoldau.kz</a>
             или позвонить по телефону <a href="tel:+77772600038" style="color: #2563eb; text-decoration: none;">+7 (777) 260-00-38</a>
           </p>
         </div>

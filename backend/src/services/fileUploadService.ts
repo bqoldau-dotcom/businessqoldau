@@ -8,6 +8,8 @@ import { AppError } from '../middleware/errorHandler';
 const UPLOAD_DIR = process.env.UPLOAD_DIR || './uploads';
 const BUSINESS_PLANS_DIR = path.join(UPLOAD_DIR, 'business-plans');
 const TEMPLATES_DIR = path.join(UPLOAD_DIR, 'templates');
+const JURY_PHOTOS_DIR = path.join(UPLOAD_DIR, 'jury');
+const FINALIST_PHOTOS_DIR = path.join(UPLOAD_DIR, 'finalists');
 
 // Create directories if they don't exist
 if (!fs.existsSync(BUSINESS_PLANS_DIR)) {
@@ -16,6 +18,14 @@ if (!fs.existsSync(BUSINESS_PLANS_DIR)) {
 
 if (!fs.existsSync(TEMPLATES_DIR)) {
   fs.mkdirSync(TEMPLATES_DIR, { recursive: true });
+}
+
+if (!fs.existsSync(JURY_PHOTOS_DIR)) {
+  fs.mkdirSync(JURY_PHOTOS_DIR, { recursive: true });
+}
+
+if (!fs.existsSync(FINALIST_PHOTOS_DIR)) {
+  fs.mkdirSync(FINALIST_PHOTOS_DIR, { recursive: true });
 }
 
 // File size limits (from .env or defaults)
@@ -131,3 +141,64 @@ export const formatFileSize = (bytes: number): string => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 };
+
+// Allowed MIME types for images
+const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+];
+
+// File filter for images
+const imageFileFilter = (
+  req: Express.Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
+  if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Only JPEG, PNG, and WebP images are allowed', 400));
+  }
+};
+
+// Storage configuration for jury photos
+const juryPhotoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, JURY_PHOTOS_DIR);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  },
+});
+
+// Storage configuration for finalist photos
+const finalistPhotoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, FINALIST_PHOTOS_DIR);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  },
+});
+
+// Multer upload middleware for jury photos
+export const uploadJuryPhoto = multer({
+  storage: juryPhotoStorage,
+  fileFilter: imageFileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+}).single('photo');
+
+// Multer upload middleware for finalist photos
+export const uploadFinalistPhoto = multer({
+  storage: finalistPhotoStorage,
+  fileFilter: imageFileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+}).single('photo');

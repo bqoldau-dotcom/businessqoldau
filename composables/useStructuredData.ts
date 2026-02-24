@@ -20,7 +20,7 @@ export const useStructuredData = () => {
         "@type": "ContactPoint",
         "telephone": "+7-XXX-XXX-XX-XX",
         "contactType": "customer service",
-        "email": "info@businesscamp.kz"
+        "email": "info@businessqoldau.kz"
       },
       "sameAs": [
         "https://businessqoldau.kz"

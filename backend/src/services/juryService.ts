@@ -4,9 +4,9 @@ import { JuryMember } from '@prisma/client';
 export interface CreateJuryMemberData {
   fullName: string;
   position: string;
-  organization?: string;
-  photoPath?: string;
-  bio?: string;
+  organization?: string | null;
+  photoPath?: string | null;
+  bio?: string | null;
   order?: number;
   isActive?: boolean;
 }
@@ -14,9 +14,9 @@ export interface CreateJuryMemberData {
 export interface UpdateJuryMemberData {
   fullName?: string;
   position?: string;
-  organization?: string;
-  photoPath?: string;
-  bio?: string;
+  organization?: string | null;
+  photoPath?: string | null;
+  bio?: string | null;
   order?: number;
   isActive?: boolean;
 }
