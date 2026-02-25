@@ -190,6 +190,20 @@ model Finalist {
   @@map("finalists")
 }
 
+// News Article - новость конкурса
+model NewsArticle {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String
+  content     String   @db.Text
+  publishDate DateTime @default(now()) @map("publish_date")
+  order       Int      @default(0)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("news_articles")
+}
+
 enum ApplicationCategory {
   starter
   active

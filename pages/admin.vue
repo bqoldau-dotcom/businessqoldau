@@ -143,6 +143,21 @@
             </svg>
             <span>Финалисты</span>
           </button>
+
+          <button
+            @click="activeTab = 'news'"
+            :class="[
+              'w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors text-left',
+              activeTab === 'news'
+                ? 'bg-blue-50 text-blue-700'
+                : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+            ]"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+            </svg>
+            <span>Новости</span>
+          </button>
         </nav>
       </aside>
 
@@ -1073,6 +1088,112 @@
           </div>
         </div>
       </div>
+
+      <!-- News Tab -->
+      <div v-else-if="activeTab === 'news'" class="space-y-6">
+        <div class="bg-white rounded-lg shadow-sm border p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">Новости</h3>
+            <button @click="openNewsModal()" class="btn-primary">
+              + Добавить новость
+            </button>
+          </div>
+
+          <!-- Loading State -->
+          <div v-if="newsLoading" class="text-center py-8">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p class="mt-2 text-gray-600">Загрузка...</p>
+          </div>
+
+          <!-- Error State -->
+          <div v-else-if="newsError" class="text-center py-8">
+            <div class="text-red-600 mb-2">Ошибка загрузки</div>
+            <button @click="loadNews" class="btn-primary text-sm">Попробовать снова</button>
+          </div>
+
+          <!-- Empty State -->
+          <div v-else-if="newsArticles.length === 0" class="text-center py-12 text-gray-500">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+            </svg>
+            <p>Новости не добавлены</p>
+          </div>
+
+          <!-- News Table -->
+          <div v-else class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50 border-b">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Заголовок</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Содержание</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дата</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Действия</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr
+                  v-for="article in newsArticles"
+                  :key="article.id"
+                  class="hover:bg-gray-50"
+                  :class="{ 'opacity-50': !article.isActive }"
+                >
+                  <td class="px-4 py-3">
+                    <div class="font-medium text-gray-900 max-w-xs truncate">{{ article.title }}</div>
+                  </td>
+                  <td class="px-4 py-3 text-sm text-gray-600 max-w-sm truncate">
+                    {{ article.content }}
+                  </td>
+                  <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
+                    {{ formatNewsDate(article.publishDate) }}
+                  </td>
+                  <td class="px-4 py-3">
+                    <span
+                      class="px-2 py-0.5 text-xs rounded-full"
+                      :class="article.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
+                    >
+                      {{ article.isActive ? 'Активна' : 'Скрыта' }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="flex gap-2">
+                      <button
+                        @click="openNewsModal(article)"
+                        class="text-blue-600 hover:text-blue-800"
+                        title="Редактировать"
+                      >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                      </button>
+                      <button
+                        @click="handleToggleNewsActive(article)"
+                        :class="article.isActive ? 'text-yellow-600 hover:text-yellow-800' : 'text-green-600 hover:text-green-800'"
+                        :title="article.isActive ? 'Скрыть' : 'Показать'"
+                      >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path v-if="article.isActive" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                          <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                      </button>
+                      <button
+                        @click="handleDeleteNews(article.id)"
+                        class="text-red-600 hover:text-red-800"
+                        title="Удалить"
+                      >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       </main>
     </div>
 
@@ -1468,6 +1589,84 @@
         </form>
       </div>
     </div>
+
+    <!-- News Modal -->
+    <div v-if="showNewsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="closeNewsModal">
+      <div class="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+          <h2 class="text-xl font-semibold text-gray-900">
+            {{ editingNews ? 'Редактировать новость' : 'Добавить новость' }}
+          </h2>
+          <button @click="closeNewsModal" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <form @submit.prevent="handleSaveNews" class="p-6 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Заголовок *</label>
+            <input
+              v-model="newsForm.title"
+              type="text"
+              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Содержание *</label>
+            <textarea
+              v-model="newsForm.content"
+              rows="6"
+              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            ></textarea>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Дата публикации</label>
+            <input
+              v-model="newsForm.publishDate"
+              type="datetime-local"
+              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input
+              v-model="newsForm.isActive"
+              type="checkbox"
+              id="newsIsActive"
+              class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+            />
+            <label for="newsIsActive" class="text-sm text-gray-700">Активна (видна на сайте)</label>
+          </div>
+
+          <div v-if="newsError" class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
+            {{ newsError }}
+          </div>
+
+          <div class="flex gap-3 pt-4">
+            <button
+              type="submit"
+              :disabled="newsLoading"
+              class="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {{ newsLoading ? 'Сохранение...' : 'Сохранить' }}
+            </button>
+            <button
+              type="button"
+              @click="closeNewsModal"
+              class="btn-secondary"
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -1508,11 +1707,12 @@ const { activeTemplate, uploadTemplate, getActiveTemplate, downloadTemplate, del
 const { settings: periodSettings, periodStatus, loading: settingsLoading, error: settingsError, getApplicationSettings, updateApplicationSettings, formatDateForInput, formatDate: formatSettingsDate } = useSettings()
 const { juryMembers, loading: juryLoading, error: juryError, getAllJuryMembers, createJuryMember, updateJuryMember, deleteJuryMember, uploadJuryPhoto, getPhotoUrl: getJuryPhotoUrl } = useJury()
 const { finalists, loading: finalistsLoading, error: finalistsError, getAllFinalists, createFinalist, updateFinalist, deleteFinalist, uploadFinalistPhoto, getPhotoUrl: getFinalistPhotoUrl, getCategoryLabel } = useFinalist()
+const { newsArticles, loading: newsLoading, error: newsError, getAllNews, createNews, updateNews: updateNewsArticle, deleteNews, formatPublishDate: formatNewsDate } = useNews()
 
 const config = useRuntimeConfig()
 const apiUrl = config.public.apiUrl
 
-const activeTab = ref<'applications' | 'users' | 'templates' | 'contacts' | 'stats' | 'settings' | 'jury' | 'finalists'>('applications')
+const activeTab = ref<'applications' | 'users' | 'templates' | 'contacts' | 'stats' | 'settings' | 'jury' | 'finalists' | 'news'>('applications')
 const filters = ref({
   status: 'submitted' as '' | 'draft' | 'submitted',
   category: '' as '' | 'starter' | 'active' | 'it',
@@ -1578,6 +1778,16 @@ const finalistForm = ref({
 })
 const finalistPhotoFile = ref<File | null>(null)
 const finalistCategoryFilter = ref<'' | 'starter' | 'active' | 'it'>('')
+
+// News state
+const showNewsModal = ref(false)
+const editingNews = ref<any>(null)
+const newsForm = ref({
+  title: '',
+  content: '',
+  publishDate: '',
+  isActive: true
+})
 
 // Export state
 const exportLoading = ref(false)
@@ -1782,6 +1992,8 @@ watch(activeTab, async (newTab) => {
     await loadJury()
   } else if (newTab === 'finalists' && finalists.value.length === 0) {
     await loadFinalists()
+  } else if (newTab === 'news' && newsArticles.value.length === 0) {
+    await loadNews()
   }
 })
 
@@ -2166,6 +2378,87 @@ const handleToggleFinalistActive = async (finalist: any) => {
     await loadFinalists()
   } catch (err) {
     console.error('Failed to toggle finalist active:', err)
+  }
+}
+
+// News handlers
+const loadNews = async () => {
+  try {
+    await getAllNews()
+  } catch (err) {
+    console.error('Failed to load news:', err)
+  }
+}
+
+const openNewsModal = (article?: any) => {
+  if (article) {
+    editingNews.value = article
+    const date = new Date(article.publishDate)
+    const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+    newsForm.value = {
+      title: article.title,
+      content: article.content,
+      publishDate: localDate.toISOString().slice(0, 16),
+      isActive: article.isActive
+    }
+  } else {
+    editingNews.value = null
+    newsForm.value = {
+      title: '',
+      content: '',
+      publishDate: '',
+      isActive: true
+    }
+  }
+  showNewsModal.value = true
+}
+
+const closeNewsModal = () => {
+  showNewsModal.value = false
+  editingNews.value = null
+}
+
+const handleSaveNews = async () => {
+  try {
+    const data: any = {
+      title: newsForm.value.title,
+      content: newsForm.value.content,
+      isActive: newsForm.value.isActive
+    }
+
+    if (newsForm.value.publishDate) {
+      data.publishDate = new Date(newsForm.value.publishDate).toISOString()
+    }
+
+    if (editingNews.value) {
+      await updateNewsArticle(editingNews.value.id, data)
+    } else {
+      await createNews(data)
+    }
+
+    await loadNews()
+    closeNewsModal()
+  } catch (err) {
+    console.error('Failed to save news:', err)
+  }
+}
+
+const handleDeleteNews = async (id: string) => {
+  if (!confirm('Вы уверены, что хотите удалить эту новость?')) return
+
+  try {
+    await deleteNews(id)
+  } catch (err) {
+    console.error('Failed to delete news:', err)
+  }
+}
+
+const handleToggleNewsActive = async (article: any) => {
+  try {
+    await updateNewsArticle(article.id, { isActive: !article.isActive })
+    await loadNews()
+  } catch (err) {
+    console.error('Failed to toggle news active:', err)
   }
 }
 

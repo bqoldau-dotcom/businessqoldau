@@ -8,6 +8,7 @@ import templateRoutes from './templateRoutes';
 import settingsRoutes from './settingsRoutes';
 import juryRoutes from './juryRoutes';
 import finalistRoutes from './finalistRoutes';
+import newsRoutes from './newsRoutes';
 
 const router = Router();
 
@@ -26,6 +27,7 @@ router.get('', (req, res) => {
       settings: '/api/settings',
       jury: '/api/jury',
       finalists: '/api/finalists',
+      news: '/api/news',
     },
   });
 });
@@ -40,5 +42,6 @@ router.use('/templates', templateRoutes);
 router.use('/settings', settingsRoutes);
 router.use('/jury', juryRoutes);
 router.use('/finalists', finalistRoutes);
+router.use('/news', newsRoutes);
 
 export default router;

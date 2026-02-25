@@ -635,6 +635,32 @@
       </div>
     </section>
 
+    <!-- News Section -->
+    <section v-if="newsArticles.length > 0" class="section-padding bg-gray-50">
+      <div class="container-custom">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{{ $t('home.news.title') }}</h2>
+          <p class="text-lg text-gray-600 max-w-2xl mx-auto">{{ $t('home.news.description') }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            v-for="article in newsArticles"
+            :key="article.id"
+            class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow duration-300"
+          >
+            <div class="p-6">
+              <div class="text-sm text-primary-600 font-medium mb-2">
+                {{ formatNewsDate(article.publishDate) }}
+              </div>
+              <h3 class="font-semibold text-gray-900 text-lg mb-3 line-clamp-2">{{ article.title }}</h3>
+              <p class="text-gray-600 text-sm line-clamp-4">{{ article.content }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- CTA Section -->
     <section class="section-padding bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white relative overflow-hidden">
       <!-- Decorative elements -->
@@ -713,6 +739,7 @@ const { settings, periodStatus, loading, getApplicationSettings, formatDate } = 
 const { getOrganizationSchema, getEventSchema, getWebSiteSchema } = useStructuredData()
 const { juryMembers, getActiveJuryMembers, getPhotoUrl: getJuryPhotoUrl } = useJury()
 const { finalists, getActiveFinalists, getPhotoUrl: getFinalistPhotoUrl, getCategoryLabel } = useFinalist()
+const { newsArticles, getActiveNews, formatPublishDate: formatNewsDate } = useNews()
 
 // FAQ accordion state
 const openFaq = ref<number | null>(null)
@@ -742,7 +769,8 @@ onMounted(async () => {
   await Promise.all([
     getApplicationSettings(),
     getActiveJuryMembers().catch(() => {}),
-    getActiveFinalists().catch(() => {})
+    getActiveFinalists().catch(() => {}),
+    getActiveNews().catch(() => {})
   ])
 })
 

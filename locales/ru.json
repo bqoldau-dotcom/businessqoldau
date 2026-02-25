@@ -78,6 +78,10 @@
       "starter": "Стартапы",
       "active": "Активный бизнес",
       "it": "IT проекты"
+    },
+    "news": {
+      "title": "Новости",
+      "description": "Последние новости и обновления конкурса Business Qoldau"
     }
   },
   "footer": {
